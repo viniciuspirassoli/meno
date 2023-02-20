@@ -4,20 +4,20 @@
 
 //https://arduino-pico.readthedocs.io/en/latest/
 
-//TODO set correct pins to control motors on pico! maybe create a define file
-#define ENA 15
-#define IN1 16
-#define IN2 17
+//pins on pico use its GPIO numbers
+#define ENA 11 //15
+#define IN1 12 //16
+#define IN2 13 //17
 
-#define IN3 18
-#define IN4 19
-#define ENB 20
+#define IN3 18 //24
+#define IN4 19 //25
+#define ENB 20 //26
 
-#define ENCA_MOT1 19
-#define ENCB_MOT1 20
+#define ENCA_MOT1 14 //19
+#define ENCB_MOT1 15 //20
 
-#define ENCA_MOT2 22
-#define ENCB_MOT2 21
+#define ENCA_MOT2 17 //22
+#define ENCB_MOT2 16 //21
 
 //Global vars
 long prevT = 0;
@@ -43,16 +43,20 @@ void readEncoder();
 
 void setup() {
   Motors.begin();
-
-  attachInterrupt(digitalPinToInterrupt(ENCA_MOT1), readEncoder, RISING);
+  Serial.begin(9600);
 }
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  int pos = 0;
 
-  Motors.setMotorSpeed(100, 1);
+  Motors.coastMotors();
+  Motors.debugPrintEncCounts();
+  // put your main code here, to run repeatedly:
+/*    int pos = 0;
+
+  analogWrite(ENA, 50);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
 
   unsigned long currT = micros();
  
@@ -91,7 +95,7 @@ void loop() {
   //update for next loop
   prevT = currT;
   prevPos = pos;
-  delay(10);
+  delay(10); */
 }
 
 void readEncoder() {
