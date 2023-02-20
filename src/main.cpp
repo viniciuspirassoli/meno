@@ -1,16 +1,23 @@
 #include <Arduino.h>
+#include <MotorController.h>
 #include <SimplyAtomic.h>
 
-#define PWM_PIN D0
-#define DIR1 D14
-#define DIR2 D13
-#define ENC1 D10
-#define ENC2 D9
-#define LINE D6
+//https://arduino-pico.readthedocs.io/en/latest/
 
-#define FORWARD 1
-#define BACKWARD 0
+//TODO set correct pins to control motors on pico! maybe create a define file
+#define ENA 15
+#define IN1 16
+#define IN2 17
 
+#define IN3 18
+#define IN4 19
+#define ENB 20
+
+#define ENCA_MOT1 19
+#define ENCB_MOT1 20
+
+#define ENCA_MOT2 22
+#define ENCB_MOT2 21
 
 //Global vars
 long prevT = 0;
@@ -21,6 +28,9 @@ float target = 0;
 int prevPos = 0;
 int nRotation = 0;
 
+
+MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
+
 //Volatile variables (for interrupts)
 volatile unsigned long prevT_i = 0; //previous time (volatile)
 volatile float velocity_i = 0; //velocity (volatile)
@@ -29,36 +39,26 @@ volatile int recordedPos = 0; //position recorded by single rotation
 volatile int prevRecordedPos = 0; //position recorded in previous rotation
 
 void readEncoder();
-void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2);
+/* void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2); */
 
 void setup() {
-  // put your setup code here, to run once: 
-  pinMode(PWM_PIN, OUTPUT);
-  pinMode(DIR1, OUTPUT);
-  pinMode(DIR2, OUTPUT);
-  pinMode(ENC1, INPUT);
-  pinMode(ENC2, INPUT);
-  pinMode(LINE, INPUT);
+  Motors.begin();
 
-  digitalWrite(PWM_PIN, LOW);
-  digitalWrite(DIR1, LOW);
-  digitalWrite(DIR2, LOW);
-  attachInterrupt(digitalPinToInterrupt(ENC1), readEncoder, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA_MOT1), readEncoder, RISING);
 }
+
 
 void loop() {
   // put your main code here, to run repeatedly:
   int pos = 0;
 
-  setMotor(FORWARD, 50, PWM_PIN, DIR1, DIR2);
+  Motors.setMotorSpeed(100, 1);
 
   unsigned long currT = micros();
-
+ 
   ATOMIC() {
     pos = pos_i;
   }
-
-  setMotor(FORWARD, 50, PWM_PIN, DIR1, DIR2);
   
   float deltaT = ((float) (currT - prevT)/1000000); //time elapsed in seconds
 
@@ -94,7 +94,7 @@ void loop() {
   delay(10);
 }
 
-void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2) {
+/* void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2) {
   if (pwmVal < 0) {
     pwmVal = 0;
   }
@@ -117,12 +117,12 @@ void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2) {
     digitalWrite(in2, LOW);
   }
 }
-
+ */
 void readEncoder() {
   //TODO: find encoder tick per rotation. Our best guess was 360 ticks/rotation.
   //However, if we put a trigger here to save pos_i into another variable when LINE is LOW, we may get a better estimate.
 
-  if (digitalRead(ENC2)) {
+  if (digitalRead(ENCB_MOT1)) {
     pos_i += 1;
   }
   else {

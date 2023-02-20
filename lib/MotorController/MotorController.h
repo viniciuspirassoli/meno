@@ -1,8 +1,8 @@
 
 class MotorController {
   public:
-    MotorController(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB,
-                    int PWMCH1, int PWMCH2);
+    MotorController(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB
+                    /*int PWMCH1, int PWMCH2*/);
     void begin();
 
     void setMotorSpeed(float speed, int motor);
@@ -19,7 +19,7 @@ class MotorController {
     int IN_4;
     int EN_B;
 
-    // PWM Channels
+    // PWM Channels - no need on pico
     int PWM_CH1;
     int PWM_CH2;
 
