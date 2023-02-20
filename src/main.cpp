@@ -29,7 +29,7 @@ int prevPos = 0;
 int nRotation = 0;
 
 
-MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
+MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB, ENCA_MOT1, ENCB_MOT1, ENCA_MOT2, ENCB_MOT2);
 
 //Volatile variables (for interrupts)
 volatile unsigned long prevT_i = 0; //previous time (volatile)
@@ -94,30 +94,6 @@ void loop() {
   delay(10);
 }
 
-/* void setMotor (int dir, int pwmVal, int pwmPin, int in1, int in2) {
-  if (pwmVal < 0) {
-    pwmVal = 0;
-  }
-  else if (pwmVal > 255) {
-    pwmVal = 255;
-  }
-
-  analogWrite(pwmPin, pwmVal);
-
-  if (dir == FORWARD) {
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
-  }
-  else if (dir == BACKWARD) {
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, HIGH);
-  }
-  else {
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
-  }
-}
- */
 void readEncoder() {
   //TODO: find encoder tick per rotation. Our best guess was 360 ticks/rotation.
   //However, if we put a trigger here to save pos_i into another variable when LINE is LOW, we may get a better estimate.
