@@ -2,32 +2,14 @@
 #include <Arduino.h>
 
 MotorController::MotorController(int ENA, int IN1, int IN2, int IN3, int IN4,
-                                 int ENB, int ENC1, int ENC2, int ENC3, int ENC4) {
+                                 int ENB) {
     EN_A = ENA;
     IN_1 = IN1;
     IN_2 = IN2;
     IN_3 = IN3;
     IN_4 = IN4;
     EN_B = ENB;
-    
-    ENC_1 = ENC1;
-    ENC_2 = ENC2;
-    ENC_3 = ENC3;
-    ENC_4 = ENC4;
-}
 
-void MotorController::readEncoder1() {
-    if (digitalRead(ENC_2)) {
-        encCount1--;
-    }
-    else encCount1++;
-}
-
-void MotorController::readEncoder2(){
-    if (digitalRead(ENC_4)){
-        encCount2--;
-    }
-    else encCount2++;
 }
 
 void MotorController::begin() {
@@ -40,19 +22,6 @@ void MotorController::begin() {
     pinMode(IN_2, OUTPUT);
     pinMode(IN_3, OUTPUT);
     pinMode(IN_4, OUTPUT);
-
-    //Encoder inputs
-    pinMode(ENC_1, INPUT);
-    pinMode(ENC_2, INPUT);
-    pinMode(ENC_3, INPUT);
-    pinMode(ENC_4, INPUT);
-
-    //Attach interrupts
-    // attachInterrupt(ENC_1, readEncoder1, RISING);
-    // attachInterrupt(ENC_3, readEncoder2, RISING);
-
-    encCount1 = 0;
-    encCount2 = 0;
 }
 
 
@@ -179,12 +148,4 @@ int MotorController::getSpeed(int Motor) {
     } else {
         return motor2PWM;
     }
-}
-
-void MotorController::debugPrintEncCounts() {
-    Serial.print("encCount1: ");
-    Serial.println(encCount1);
-
-    Serial.print("encCount2: ");
-    Serial.println(encCount2);
 }
