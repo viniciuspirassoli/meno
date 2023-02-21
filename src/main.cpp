@@ -23,6 +23,15 @@
 volatile int encCount1 = 0;
 volatile int encCount2 = 0;
 
+int currCount1;
+int currCount2;
+
+int last_encCount1 = 0;
+int last_encCount2 = 0;
+
+unsigned long currentTime_us = 0;
+unsigned long lastTime_us = 0;
+
 MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
 //TODO Make reading the encoders functional
 
@@ -56,12 +65,26 @@ void setup() {
 
 
 void loop() {
+  currentTime_us = micros();
 
+  ATOMIC() {
+    currCount1 = encCount1;
+    currCount2 = encCount2;
+  }
+  
+  
   Motors.coastMotors();
-  Serial.print("encCount1: ");
-  Serial.print(encCount1);
+  Serial.print("currCount1: ");
+  Serial.print(currCount1);
+  Serial.print("__Speed 1: ");
+  Serial.print((currCount1 - last_encCount1) / (currentTime_us - lastTime_us)); //encoder ticks per microsecond
   Serial.print("____");
-  Serial.print("encCount2: ");
-  Serial.println(encCount2);
+  Serial.print("__Speed 2: ");
+  Serial.print((currCount2 - last_encCount2) / (currentTime_us - lastTime_us)); //encoder ticks per microsseconds
+  Serial.print("currCount2: ");
+  Serial.println(currCount2);
 
+  last_encCount1 = currCount1;
+  last_encCount2 = currCount2;
+  lastTime_us = currentTime_us;
 }
