@@ -34,8 +34,15 @@ int last_encCount2 = 0;
 long currentTime_us = 0;
 long lastTime_us = 0;
 
+float velocities1[FILTER_SIZE] = {0};
+float velocities2[FILTER_SIZE] = {0};
+int velIndex = 0;
+float sum1 = 0;
+float sum2 = 0;
+float avgVelocity1 = 0;
+float avgVelocity2 = 0;
+
 MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
-//TODO Make reading the encoders functional
 
 void readEncoder1() {
     if (digitalRead(ENCB_MOT1)) {
@@ -44,18 +51,22 @@ void readEncoder1() {
     else encCount1++;
 }
 
-void readEncoder2(){
+void readEncoder2() {
     if (digitalRead(ENCB_MOT2)){
         encCount2--;
     }
     else encCount2++;
 }
 
-void setup() {
+void setupEncoders() {
   pinMode(ENCA_MOT1, INPUT);
   pinMode(ENCB_MOT1, INPUT);
   pinMode(ENCA_MOT2, INPUT);
   pinMode(ENCB_MOT2, INPUT);
+}
+
+void setup() {
+  setupEncoders();
   
   Motors.begin();
   Serial.begin(9600);
@@ -75,22 +86,34 @@ void loop() {
 
   float currVelocity1 = (float)(1000*(currCount1 - last_encCount1)) / (float)(currentTime_us - lastTime_us); //ticks per milisecond
   float currVelocity2 = (float)(1000*(currCount2 - last_encCount2)) / (float)(currentTime_us - lastTime_us); //ticks per milisecond
+  
+  velIndex = (velIndex >= FILTER_SIZE) ? 0 : velIndex; //isso e' um if compacto muito maneiro, decorar
+
+  //remove old readings @ velIndex
+  sum1 -= velocities1[velIndex];
+  sum2 -= velocities2[velIndex];
+
+  //update buffer
+  velocities1[velIndex] = currVelocity1;
+  velocities2[velIndex] = currVelocity2;
+
+  //add new readings
+  sum1 += velocities1[velIndex];
+  sum2 += velocities2[velIndex];
+  
+  //calculate average
+  avgVelocity1 = sum1 / FILTER_SIZE;
+  avgVelocity2 = sum2 / FILTER_SIZE;
+
+  //update index
+  velIndex++;
 
   Motors.setMotors(80*sin(PI*millis()/2000));
 
-  Serial.print("currCount1: ");
-  Serial.print(currCount1);
-  Serial.print("__DELTA TICKS 1: ");
-  Serial.print((currCount1 - last_encCount1));
-
-  Serial.print("____");
-  Serial.print("DELTA T us: ");
-  Serial.print(currentTime_us - lastTime_us);
-  Serial.print("  Velocity 1: ");
+  Serial.print("Average velocity 1: ");
+  Serial.print(avgVelocity1);
+  Serial.print("   Velocity 1: ");
   Serial.print(currVelocity1);
-  Serial.print("speed: ");
-  Serial.print(Motors.getSpeed(1));
-
   
   //Serial.print("currCount2: ");
   //Serial.print(currCount2);
@@ -100,6 +123,6 @@ void loop() {
   last_encCount2 = currCount2;
   lastTime_us = currentTime_us;
 
-  //TODO remove this later (after applying rolling average)
+  //TODO remove this later
   delay(10);
   }
