@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <MotorController.h>
 #include <SimplyAtomic.h>
+#include <PID_v1.h>
 
 //https://arduino-pico.readthedocs.io/en/latest/
 
@@ -21,6 +22,8 @@
 
 #define FILTER_SIZE 5
 
+#define MAX_VELOCITY 1.79
+
 //Global vars
 volatile int encCount1 = 0;
 volatile int encCount2 = 0;
@@ -34,15 +37,22 @@ int last_encCount2 = 0;
 long currentTime_us = 0;
 long lastTime_us = 0;
 
-float velocities1[FILTER_SIZE] = {0};
-float velocities2[FILTER_SIZE] = {0};
+double velocities1[FILTER_SIZE] = {0};
+double velocities2[FILTER_SIZE] = {0};
 int velIndex = 0;
-float sum1 = 0;
-float sum2 = 0;
-float avgVelocity1 = 0;
-float avgVelocity2 = 0;
+double sum1 = 0;
+double sum2 = 0;
+double avgVelocity1 = 0;
+double avgVelocity2 = 0;
+
+double targetVelocity1 = 0;
+double targetVelocity2 = 0;
+double PIDout1 = 0;
+double PIDout2 = 0;
 
 MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
+PID Motor1(&avgVelocity1, &PIDout1, &targetVelocity1, 58.3, 50, 0, DIRECT);
+PID Motor2(&avgVelocity2, &PIDout2, &targetVelocity2, 58.3, 50, 0, DIRECT);
 
 void readEncoder1() {
     if (digitalRead(ENCB_MOT1)) {
@@ -67,6 +77,10 @@ void setupEncoders() {
 
 void setup() {
   setupEncoders();
+  Motor1.SetMode(AUTOMATIC);
+  Motor2.SetMode(AUTOMATIC);
+  Motor1.SetOutputLimits(-100, 100);
+  Motor2.SetOutputLimits(-100, 100);
   
   Motors.begin();
   Serial.begin(9600);
@@ -77,27 +91,31 @@ void setup() {
 
 
 void loop() {
+
   currentTime_us = micros();
 
   ATOMIC() {
     currCount1 = encCount1;
     currCount2 = encCount2;
-  }
+  }  
+  
+  targetVelocity1 = 0.25*MAX_VELOCITY; //percentage of max speed
+  targetVelocity2 = 0.25*MAX_VELOCITY; //percentage of max speed
 
-  float currVelocity1 = (float)(1000*(currCount1 - last_encCount1)) / (float)(currentTime_us - lastTime_us); //ticks per milisecond
-  float currVelocity2 = (float)(1000*(currCount2 - last_encCount2)) / (float)(currentTime_us - lastTime_us); //ticks per milisecond
+  double currVelocity1 = (double)(1000*(currCount1 - last_encCount1)) / (double)(currentTime_us - lastTime_us); //degrees per milisecond
+  double currVelocity2 = (double)(1000*(currCount2 - last_encCount2)) / (double)(currentTime_us - lastTime_us); //degrees per milisecond
   
   velIndex = (velIndex >= FILTER_SIZE) ? 0 : velIndex; //isso e' um if compacto muito maneiro, decorar
 
-  //remove old readings @ velIndex
+  //subtract old readings from sum
   sum1 -= velocities1[velIndex];
   sum2 -= velocities2[velIndex];
 
-  //update buffer
+  //update buffer with new readings
   velocities1[velIndex] = currVelocity1;
   velocities2[velIndex] = currVelocity2;
 
-  //add new readings
+  //add new readings to sum
   sum1 += velocities1[velIndex];
   sum2 += velocities2[velIndex];
   
@@ -108,15 +126,22 @@ void loop() {
   //update index
   velIndex++;
 
-  Motors.setMotors(80*sin(PI*millis()/2000));
+  Motor1.Compute();
+  Motor2.Compute();
+  
+  Motors.setMotorSpeed(PIDout1, 1);
+  Motors.setMotorSpeed(PIDout2, 2);
 
   Serial.print("Average velocity 1: ");
   Serial.print(avgVelocity1);
-  Serial.print("   Velocity 1: ");
-  Serial.print(currVelocity1);
-  
-  //Serial.print("currCount2: ");
-  //Serial.print(currCount2);
+  Serial.print("  Average velocity 2: ");
+  Serial.print(avgVelocity2);
+  Serial.print("      ");
+  Serial.print("PIDout1: ");
+  Serial.print(PIDout1);
+  Serial.print("  ");
+  Serial.print("PIDout2: ");
+  Serial.print(PIDout2);
   Serial.println("");
 
   last_encCount1 = currCount1;
