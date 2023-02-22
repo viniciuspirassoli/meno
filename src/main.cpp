@@ -2,6 +2,7 @@
 #include <MotorController.h>
 #include <SimplyAtomic.h>
 #include <PID_v1.h>
+#include "EncoderHandler.h"
 
 //https://arduino-pico.readthedocs.io/en/latest/
 
@@ -22,7 +23,7 @@
 
 #define FILTER_SIZE 5
 
-#define MAX_VELOCITY 1.79
+#define MAX_VELOCITY 1.79 //in degrees per milisecond
 
 //Global vars
 volatile int encCount1 = 0;
@@ -84,20 +85,19 @@ void setup() {
   
   Motors.begin();
   Serial.begin(9600);
-  
+
   attachInterrupt(ENCA_MOT1, readEncoder1, RISING);
   attachInterrupt(ENCA_MOT2, readEncoder2, RISING);
 } 
 
 
 void loop() {
-
   currentTime_us = micros();
 
   ATOMIC() {
     currCount1 = encCount1;
     currCount2 = encCount2;
-  }  
+  }
   
   targetVelocity1 = 0.25*MAX_VELOCITY; //percentage of max speed
   targetVelocity2 = 0.25*MAX_VELOCITY; //percentage of max speed
@@ -105,7 +105,7 @@ void loop() {
   double currVelocity1 = (double)(1000*(currCount1 - last_encCount1)) / (double)(currentTime_us - lastTime_us); //degrees per milisecond
   double currVelocity2 = (double)(1000*(currCount2 - last_encCount2)) / (double)(currentTime_us - lastTime_us); //degrees per milisecond
   
-  velIndex = (velIndex >= FILTER_SIZE) ? 0 : velIndex; //isso e' um if compacto muito maneiro, decorar
+  if (velIndex >= FILTER_SIZE) velIndex = 0;
 
   //subtract old readings from sum
   sum1 -= velocities1[velIndex];
