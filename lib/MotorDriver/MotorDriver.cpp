@@ -1,7 +1,7 @@
-#include "MotorController.h"
+#include "MotorDriver.h"
 #include <Arduino.h>
 
-MotorController::MotorController(int ENA, int IN1, int IN2, int IN3, int IN4,
+MotorDriver::MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4,
                                  int ENB) {
     EN_A = ENA;
     IN_1 = IN1;
@@ -12,7 +12,7 @@ MotorController::MotorController(int ENA, int IN1, int IN2, int IN3, int IN4,
 
 }
 
-void MotorController::begin() {
+void MotorDriver::begin() {
     //PWM outputs
     pinMode(EN_A, OUTPUT);
     pinMode(EN_B, OUTPUT);
@@ -25,7 +25,7 @@ void MotorController::begin() {
 }
 
 
-void MotorController::setMotorSpeed(float speed, int motor) {
+void MotorDriver::setMotorSpeed(float speed, int motor) {
     if ((motor != 1 && motor != 2) || abs(speed) > 100.0F) {
         return;
     }
@@ -67,7 +67,7 @@ void MotorController::setMotorSpeed(float speed, int motor) {
     return;
 }
 
-void MotorController::coastMotor(int motor) {
+void MotorDriver::coastMotor(int motor) {
     if (motor != 1 && motor != 2) {
         return;
     }
@@ -83,7 +83,7 @@ void MotorController::coastMotor(int motor) {
     }
 }
 
-void MotorController::setMotors(float speed) {
+void MotorDriver::setMotors(float speed) {
     if (abs(speed) > 100) {
         return;
     }
@@ -117,7 +117,7 @@ void MotorController::setMotors(float speed) {
     else coastMotors();
 }
 
-void MotorController::stopMotors() {
+void MotorDriver::stopMotors() {
     digitalWrite(IN_1, LOW);
     digitalWrite(IN_2, LOW);
     digitalWrite(IN_3, LOW);
@@ -130,7 +130,7 @@ void MotorController::stopMotors() {
     motor2PWM = 0;
 }
 
-void MotorController::coastMotors() {
+void MotorDriver::coastMotors() {
     analogWrite(EN_A, 0);
     analogWrite(EN_B, 0);
 
@@ -138,7 +138,7 @@ void MotorController::coastMotors() {
     motor2PWM = 0;
 }
 
-int MotorController::getSpeed(int Motor) {
+int MotorDriver::getSpeed(int Motor) {
     if (Motor != 1 && Motor != 2) {
         return 0;
     }

@@ -1,7 +1,7 @@
 //20% of speed seems to be the limiar value to move from rest
-class MotorController {
+class MotorDriver {
   public:
-    MotorController(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB);
+    MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4, int ENB);
     void begin();
 
     void setMotorSpeed(float speed, int motor);

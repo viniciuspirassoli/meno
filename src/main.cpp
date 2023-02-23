@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <MotorController.h>
+#include <MotorDriver.h>
 #include <SimplyAtomic.h>
 #include <PID_v1.h>
 #include "EncoderHandler.h"
@@ -53,7 +53,7 @@ double PIDout2 = 0;
 
 EncoderHandler motor1_encoder(ENCA_MOT1, ENCB_MOT1);
 EncoderHandler motor2_encoder(ENCA_MOT2, ENCB_MOT2);
-MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
+MotorDriver Motors(ENA, IN1, IN2, IN3, IN4, ENB);
 PID Motor1(&avgVelocity1, &PIDout1, &targetVelocity1, 58.3, 50, 0, DIRECT);
 PID Motor2(&avgVelocity2, &PIDout2, &targetVelocity2, 58.3, 50, 0, DIRECT);
 
