@@ -1,31 +1,29 @@
 #include "EncoderHandler.h"
 
-void EncoderHandler::setupEncoder(int ENC_A1, int ENC_A2, int ENC_B1, int ENC_B2) {
-    EncoderHandler::ENCA_1 = ENC_A1;
-    EncoderHandler::ENCB_1 = ENC_B1;
-    EncoderHandler::ENCA_2 = ENC_A2;
-    EncoderHandler::ENCB_2 = ENC_B2;
-    EncoderHandler::resetCounters();
-
-    attachInterrupt(EncoderHandler::ENCA_1, EncoderHandler::handleInterrupt1, RISING);
-    attachInterrupt(EncoderHandler::ENCA_2, EncoderHandler::handleInterrupt2, RISING);
+EncoderHandler::EncoderHandler(int encoderPin1, int encoderPin2) : ENC_1(encoderPin1), ENC_2(encoderPin2) {
+    this->resetCount();
+    attachInterrupt(ENC_1, EncoderHandler::handleInterrupt, RISING, this);
 }
 
-void EncoderHandler::handleInterrupt1() {
-    if (digitalRead(EncoderHandler::ENCA_2)) {
-        EncoderHandler::encCount1--;
+void EncoderHandler::setup() {
+    pinMode(this->ENC_1, INPUT);
+    pinMode(this->ENC_2, INPUT);
+}
+
+
+void EncoderHandler::handleInterrupt(EncoderHandler* obj) {
+    if (digitalRead(obj->ENC_2)) {
+        obj->encoderPulseCount--;
     }
-    else EncoderHandler::encCount1++;
-}
-
-void EncoderHandler::handleInterrupt2() {
-    if (digitalRead(EncoderHandler::ENCB_2)) {
-        EncoderHandler::encCount2--;
+    else  {
+        obj->encoderPulseCount++;
     }
-    else EncoderHandler::encCount2++;
 }
 
-void EncoderHandler::resetCounters() {
-    EncoderHandler::encCount1 = 0;
-    EncoderHandler::encCount2 = 0;
+void EncoderHandler::resetCount() {
+    this->encoderPulseCount = 0;
+}
+
+int EncoderHandler::getCount() {
+    return this->encoderPulseCount;
 }

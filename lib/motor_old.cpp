@@ -1,4 +1,4 @@
-#include "motor.h"
+#include "motor_old.h"
 
 void Motor::setup() {
 
@@ -8,13 +8,13 @@ void Motor::setup() {
     pinMode(DIR2, OUTPUT);
     pinMode(PWM_PIN, OUTPUT);
 
-    attachInterrupt(digitalPinToInterrupt(ENC1), Motor::readEncoder, RISING);
+    //attachInterrupt(digitalPinToInterrupt(ENC1), Motor::readEncoder, RISING);
 
 }
-
+/*
 void debugMode (bool debug) {
     this->debugFlag = debug;
-}
+}*/
 
 void Motor::readEncoder() {
     if (digitalRead(ENC2)) {
@@ -91,7 +91,7 @@ void Motor::setMotor(uint8_t dir, int pwm) {
     analogWrite(PWM_PIN, pwm);
 }
 
-float Motor::getVelocity() {
+/*float Motor::getVelocity() {
     //TODO: change this to filtVelocity once the filter is done.
     return velocity;
-}
+}*/

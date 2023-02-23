@@ -4,15 +4,14 @@
 
 class EncoderHandler {
     public:
-        static void setupEncoder(int ENC_A1, int ENC_A2, int ENC_B1, int ENC_B2);
-        static void handleInterrupt1();
-        static void handleInterrupt2();
-        static void resetCounters();
-        static int getCount1();
-        static int getCount2();
-        static volatile int encCount1, encCount2;
-
+        EncoderHandler(int encoderPin1, int encoderPin2); 
+        void setup();
+        static void handleInterrupt(EncoderHandler* obj);
+        void resetCount();
+        int getCount();
+       
     private:
-        static int ENCA_1, ENCB_1, ENCA_2, ENCB_2;
+        volatile int encoderPulseCount;
+        int ENC_1, ENC_2;
         
 };

@@ -51,33 +51,16 @@ double targetVelocity2 = 0;
 double PIDout1 = 0;
 double PIDout2 = 0;
 
+EncoderHandler motor1_encoder(ENCA_MOT1, ENCB_MOT1);
+EncoderHandler motor2_encoder(ENCA_MOT2, ENCB_MOT2);
 MotorController Motors(ENA, IN1, IN2, IN3, IN4, ENB);
 PID Motor1(&avgVelocity1, &PIDout1, &targetVelocity1, 58.3, 50, 0, DIRECT);
 PID Motor2(&avgVelocity2, &PIDout2, &targetVelocity2, 58.3, 50, 0, DIRECT);
 
-void readEncoder1() {
-    if (digitalRead(ENCB_MOT1)) {
-        encCount1--;
-    }
-    else encCount1++;
-}
-
-void readEncoder2() {
-    if (digitalRead(ENCB_MOT2)){
-        encCount2--;
-    }
-    else encCount2++;
-}
-
-void setupEncoders() {
-  pinMode(ENCA_MOT1, INPUT);
-  pinMode(ENCB_MOT1, INPUT);
-  pinMode(ENCA_MOT2, INPUT);
-  pinMode(ENCB_MOT2, INPUT);
-}
-
 void setup() {
-  setupEncoders();
+  motor1_encoder.setup();
+  motor2_encoder.setup();
+  
   Motor1.SetMode(AUTOMATIC);
   Motor2.SetMode(AUTOMATIC);
   Motor1.SetOutputLimits(-100, 100);
@@ -86,8 +69,6 @@ void setup() {
   Motors.begin();
   Serial.begin(9600);
 
-  attachInterrupt(ENCA_MOT1, readEncoder1, RISING);
-  attachInterrupt(ENCA_MOT2, readEncoder2, RISING);
 } 
 
 
