@@ -1,10 +1,10 @@
-//TODO get this to work
+#pragma once
 #include <Arduino.h>
 #include <SimplyAtomic.h>
 
 class EncoderHandler {
     public:
-        EncoderHandler(int encoderPin1, int encoderPin2); 
+        EncoderHandler(uint8_t encoderPin1, uint8_t encoderPin2); 
         void setup();
         static void handleInterrupt(EncoderHandler* obj);
         void resetCount();

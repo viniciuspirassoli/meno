@@ -1,53 +1,53 @@
-#include <Arduino.h>
+/*
+#include <PID_v1.h>
+#include <MotorDriver.h>
+#include <EncoderHandler.h>
 #include <SimplyAtomic.h>
 
-#define pin uint8_t
-#define FORWARD 1
-#define BACKWARD 0
+class MotorController{
+    public:
+        MotorController(MotorDriver m_d, EncoderHandler left_EH, EncoderHandler right_EH);
+        ~MotorController();
 
-//wheel diameter: 67,48mm
-//wheel radius: 33,74mm
+        void setup();
+        void loop();
 
-class Motor
-{
-private:
-    pin PWM_PIN;
-    pin DIR1;
-    pin DIR2;
-    pin ENC1;
-    pin ENC2;
+        void setFilterSize(int newFilterSize);
 
-    unsigned long prevT = 0;
-    float velocity = 0; //in rad/s
-    float filtVelocity = 0;
-    float targetVelocity = 0;
-    int pos = 0;
-    int prevPos = 0;
+    private:
+        MotorDriver* md;
+        PID leftPID, rightPID;
+        EncoderHandler *leftEH, *rightEH;
 
-    volatile int pos_i = 0;
+        int filterSize;
+        
+        //vector to filter, target to PID, Input to PID for the left motor
+        double* leftVelocities;
+        double leftTargetVelocity;
+        double leftAvgVelocity;
 
-    bool debugFlag = false;
-    
-    void readEncoder();
-    
-public:
-    Motor(pin PWM_PIN, pin DIR1, pin DIR2, pin ENC1, pin ENC2);
-    ~Motor();
-    void setup();
-    void update();
-    void setMotor(uint8_t dir, int pwm);
-    void debugMode(bool debug);
+        //vector to filter, target to PID, Input to PID for the right motor
+        double* rightVelocities; 
+        double rightTargetVelocity;
+        double rightAvgVelocity;
+
+        int velIndex;
+
+        //Constants for PIDs controllers
+        double leftKP, leftKI, leftKD;
+        double rightKP, rightKI, rightKD;
+        double leftPIDout, rightPIDout;
+        
+        //Enconder Counters
+        int currEncCountLeft;
+        int currEncCountRight;
+        int prevEncCountLeft;
+        int prevEncCountRight;
+
+        long currTime_us;
+        long prevTime_us;
+
+
+        
 };
-
-Motor::Motor(pin PWM_PIN, pin DIR1, pin DIR2, pin ENC1, pin ENC2)
-{
-    this->PWM_PIN = PWM_PIN;
-    this->DIR1 = DIR1;
-    this->DIR2 = DIR2;
-    this->ENC1 = ENC1;
-    this->ENC2 = ENC2;
-}
-
-Motor::~Motor()
-{
-}
+*/

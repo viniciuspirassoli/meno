@@ -1,97 +1,61 @@
-#include "motor_old.h"
-
-void Motor::setup() {
-
-    pinMode(ENC1, INPUT);
-    pinMode(ENC2, INPUT);
-    pinMode(DIR1, OUTPUT);
-    pinMode(DIR2, OUTPUT);
-    pinMode(PWM_PIN, OUTPUT);
-
-    //attachInterrupt(digitalPinToInterrupt(ENC1), Motor::readEncoder, RISING);
-
-}
 /*
-void debugMode (bool debug) {
-    this->debugFlag = debug;
-}*/
+#include <MotorController.h>
 
-void Motor::readEncoder() {
-    if (digitalRead(ENC2)) {
-        pos_i += 1;
-    }
-    else {
-        pos_i -= 1;
-    }
+MotorController::MotorController(MotorDriver m_d, EncoderHandler left_EH, EncoderHandler right_EH) :
+md(&m_d), leftEH(&left_EH), rightEH(&right_EH),
+leftPID(&leftAvgVelocity, &leftPIDout, &leftTargetVelocity, leftKP, leftKI, leftKD, DIRECT),            //Initialize left PID
+rightPID(&rightAvgVelocity, &rightPIDout, &rightTargetVelocity, rightKP, rightKI, rightKD, DIRECT)      //Initialize right PID
+{
+    this->filterSize = 5;
+    this->currEncCountLeft = 0;
+    this->currEncCountRight = 0;
+    this->prevEncCountLeft = 0;
+    this->prevEncCountRight = 0;
+    this->currTime_us = 0;
+    this->prevTime_us = 0;
+    this->velIndex = 0;
+
+    this->leftVelocities = (double*)malloc(this->filterSize*sizeof(double));
+    this->rightVelocities = (double*)malloc(this->filterSize*sizeof(double));
 }
 
-void Motor::update() {
+//TODO: Finish destructor
+MotorController::~MotorController() {
+    free(this->leftVelocities);
+    free(this->rightVelocities);
+}
+
+void MotorController::setup() {
+    md->begin();
+
+
+    leftPID.SetMode(AUTOMATIC);
+    rightPID.SetMode(AUTOMATIC);
+    leftPID.SetOutputLimits(-100, 100);
+    rightPID.SetOutputLimits(-100, 100);
+
+    leftEH->setup();
+    rightEH->setup();
+
+    //TODO review this Serial.begin()
+    Serial.begin(9600);
+}
+
+void MotorController::loop() {
+    this->currTime_us = micros();
 
     ATOMIC() {
-        pos = pos_i;
+        this->currEncCountLeft = leftEH->getCount();
+        this->currEncCountRight = rightEH->getCount();
     }
 
-    unsigned long currT = micros();
-
-    float deltaT = ((float) (currT - prevT)/1000000);
-
-    velocity = 2*PI*(pos - prevPos)/(360*deltaT); //in rad/s
-
-    if (debugFlag) {
-        Serial.println("---------");
-
-        Serial.println("pos: ");
-        Serial.print(pos);
-        Serial.println("");
-
-        Serial.println("deltaT: ");
-        Serial.print(deltaT);
-        Serial.println("");
-
-        Serial.println("deltaPos: ");
-        Serial.print(pos-prevPos);
-        Serial.println("");
-        
-        Serial.println("velocity: ");
-        Serial.print(velocity);
-        Serial.println("");
-
-        Serial.println("---------");
-    }
-
-    //for next loop
-    prevT = currT;
-    prevPos = pos;
-    //no delay here, that's main.cpp's problem lmao
-
+    this->prevTime_us = this->currTime_us;
 }
 
-void Motor::setMotor(uint8_t dir, int pwm) {
-    //TODO: make this function private once the PID controller is done.
-    if (pwm < 0) {
-        pwm = 0;
-    }
-    else if (pwm > 255) {
-        pwm = 255;
-    }
-
-    if (dir == FORWARD) {
-        digitalWrite(DIR1, HIGH);
-        digitalWrite(DIR2, LOW);
-    }
-    else if (dir == BACKWARD) {
-        digitalWrite(DIR1, LOW);
-        digitalWrite(DIR2, HIGH);
-    }
-    else {
-        digitalWrite(DIR1, LOW);
-        digitalWrite(DIR2, LOW);
-    }
-
-    analogWrite(PWM_PIN, pwm);
+void MotorController::setFilterSize(int newFilterSize) {
+    if (newFilterSize < 1 || newFilterSize > 100) {return;}
+    this->filterSize = newFilterSize;
+    realloc(this->leftVelocities, newFilterSize*sizeof(double));
+    realloc(this->rightVelocities, newFilterSize*sizeof(double));
 }
-
-/*float Motor::getVelocity() {
-    //TODO: change this to filtVelocity once the filter is done.
-    return velocity;
-}*/
+*/

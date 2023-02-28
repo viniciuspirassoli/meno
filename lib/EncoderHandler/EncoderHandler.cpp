@@ -1,6 +1,6 @@
 #include "EncoderHandler.h"
 
-EncoderHandler::EncoderHandler(int encoderPin1, int encoderPin2) : ENC_1(encoderPin1), ENC_2(encoderPin2) {
+EncoderHandler::EncoderHandler(uint8_t encoderPin1, uint8_t encoderPin2) : ENC_1(encoderPin1), ENC_2(encoderPin2) {
     this->resetCount();
     attachInterrupt(ENC_1, EncoderHandler::handleInterrupt, RISING, this);
 }

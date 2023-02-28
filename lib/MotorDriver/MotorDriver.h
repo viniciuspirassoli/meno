@@ -1,3 +1,5 @@
+#pragma once
+
 //20% of speed seems to be the limiar value to move from rest
 class MotorDriver {
   public:
