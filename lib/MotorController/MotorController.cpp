@@ -48,8 +48,8 @@ void MotorController::setup() {
 
     leftPID->SetMode(AUTOMATIC);
     rightPID->SetMode(AUTOMATIC);
-    leftPID->SetOutputLimits(-100, 100);
-    rightPID->SetOutputLimits(-100, 100);
+    leftPID->SetOutputLimits(-1.79, 1.79);
+    rightPID->SetOutputLimits(-1.79, 1.79);
 
     leftEH->setup();
     rightEH->setup();
@@ -85,8 +85,8 @@ void MotorController::loop() {
     leftPID->Compute();
     rightPID->Compute();
 
-    motorDriver->setMotorSpeed(leftPIDout, LEFT);
-    motorDriver->setMotorSpeed(rightPIDout, RIGHT);
+    motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
+    motorDriver->setMotorSpeed(rightPIDout*PID_MULTIPLIER, RIGHT);
 
 
     //Save last loop cycle Values

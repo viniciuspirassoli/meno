@@ -8,6 +8,7 @@ class MotorController{
     public:
         #define LEFT 1
         #define RIGHT 2
+        #define PID_MULTIPLIER 55.866 //scales the PID output
 
         /**
         *@brief Constructor of Motor Controller

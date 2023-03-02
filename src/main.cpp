@@ -27,8 +27,8 @@
 #define MAX_VELOCITY 1.79 //in degrees per milisecond
 
 //TODO: calibrate PIDs!!!
-#define KP 58.3
-#define KI 50
+#define KP 1
+#define KI 1
 #define KD 0
 
 MotorController motorController(ENA, IN1, IN2, IN3, IN4, ENB,
@@ -52,7 +52,7 @@ void loop() {
     set = abs(set-1);
     LastTime = currentTime;
   }
-  //double sinewave = MAX_VELOCITY*sin(PI*1000*millis());
+
   motorController.setTargetVelocities(set*0.5*MAX_VELOCITY, set*0.5*MAX_VELOCITY);
   motorController.loop();
 
