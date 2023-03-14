@@ -24,8 +24,6 @@
 
 #define FILTER_SIZE 5
 
-#define MAX_VELOCITY 1.79 //in degrees per milisecond
-
 //TODO: calibrate PIDs!!!
 #define KP 1
 #define KI 1

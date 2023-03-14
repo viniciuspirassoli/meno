@@ -103,9 +103,26 @@ void MotorController::setFilterSize(int newFilterSize) {
 }
 
 void MotorController::setTargetVelocities(double targetLeft, double targetRight) {
-    if (abs(targetLeft) > 100 || abs(targetRight) > 100) return;
-    this->leftTargetVelocity = targetLeft;    
-    this->rightTargetVelocity = targetRight;
+    this->setTargetVelocity(LEFT, targetLeft);
+    this->setTargetVelocity(RIGHT, targetRight);
+}
+
+void MotorController::setTargetVelocity(int motor, double target) {
+    if (motor != RIGHT && motor != LEFT) {return;}
+
+    if (target > MAX_VELOCITY) {
+        target = MAX_VELOCITY;
+    }
+    else if (target < -MAX_VELOCITY) {
+        target = -MAX_VELOCITY;
+    }
+
+    if (motor == RIGHT) {
+        this->rightTargetVelocity = target;
+    }
+    else if (motor == LEFT) {
+        this->leftTargetVelocity = target;
+    }
 }
 
 void MotorController::stop() {
