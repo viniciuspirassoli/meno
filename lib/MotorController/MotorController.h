@@ -45,6 +45,10 @@ class MotorController{
 
         double getAvgVelocity(int motor);
 
+        void setPIDTunings(double new_KP, double new_KI, double new_KD);
+
+        void setPIDTuning(int motor, double new_KP, double new_KI, double new_KD);
+
         void stop();
         void coast();
 

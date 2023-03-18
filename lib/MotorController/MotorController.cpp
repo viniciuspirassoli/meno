@@ -125,6 +125,18 @@ void MotorController::setTargetVelocity(int motor, double target) {
     }
 }
 
+void MotorController::setPIDTunings(double new_KP, double new_KI, double new_KD) {
+    leftPID->SetTunings(new_KP, new_KI, new_KD);
+    rightPID->SetTunings(new_KP, new_KI, new_KD);
+}
+
+void MotorController::setPIDTuning(int motor, double new_KP, double new_KI, double new_KD) {
+    if (motor == LEFT)
+        leftPID->SetTunings(new_KP, new_KI, new_KD);
+    
+    else if (motor == RIGHT)
+        rightPID->SetTunings(new_KP, new_KI, new_KD);
+}
 void MotorController::stop() {
     motorDriver->stopMotors();
     this->leftTargetVelocity = 0;    
