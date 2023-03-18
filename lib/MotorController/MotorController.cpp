@@ -40,6 +40,11 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
 MotorController::~MotorController() {
     free(this->leftVelocities);
     free(this->rightVelocities);
+    free(this->rightPID);
+    free(this->leftPID);
+    free(this->motorDriver);
+    free(this->leftEH);
+    free(this->rightEH);
 }
 
 void MotorController::setup() {
