@@ -10,6 +10,8 @@ class MotorController{
         #define RIGHT 2
         #define PID_MULTIPLIER 55.866 //scales the PID output
         #define MAX_VELOCITY 1.79 //in degrees per milisecond
+        #define WHEEL_RADIUS 0.029
+        #define WHEELS_DISTANCE 0.2 
 
         /**
         *@brief Constructor of Motor Controller
@@ -43,7 +45,7 @@ class MotorController{
         void setTargetVelocity(int motor, double target);
         void setTargetVelocities(double targetLeft, double targetRight);
 
-        double getAvgVelocity(int motor);
+        double getAvgVelocity(int motor); //dregrees per milisecond
 
         void setPIDTunings(double new_KP, double new_KI, double new_KD);
 
@@ -91,5 +93,17 @@ class MotorController{
 
         //Pins
         uint8_t enA, in1, in2, in3, in4, enB;
+
+        //Estimation and odometry
+        float wLeft, wRight;
+        float vLeft, vRight;
+        float vRobot, wRobot;
+        float dSpace, dTheta;
+        float xEstimated, yEstimated, thetaEstimated; //absolute
+        float relativeSpace, relativeTheta; //relative
+
+        double deltaT;
+        
+
         
 };

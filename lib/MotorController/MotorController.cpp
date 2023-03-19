@@ -24,6 +24,8 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
     this->prevTime_us = 0;
     this->velIndex = 0;
 
+    this->deltaT = 0;
+
     this->rightCurrVelocity = 0;
     this->leftCurrVelocity = 0;
 
@@ -50,6 +52,9 @@ MotorController::~MotorController() {
 void MotorController::setup() {
     motorDriver->begin();
 
+    currTime_us = micros();
+
+    deltaT = (double) (currTime_us - prevTime_us);
 
     leftPID->SetMode(AUTOMATIC);
     rightPID->SetMode(AUTOMATIC);
@@ -62,14 +67,15 @@ void MotorController::setup() {
 
 void MotorController::loop() {
     this->currTime_us = micros();
+    this->deltaT = (double) (currTime_us - prevTime_us);
 
     ATOMIC() {
         this->currEncCountLeft = leftEH->getCount();
         this->currEncCountRight = rightEH->getCount();
     }
 
-    this->leftCurrVelocity = (double)(1000*(currEncCountLeft - prevEncCountLeft)) / (double)(currTime_us - prevTime_us);
-    this->rightCurrVelocity = (double)(1000*(currEncCountRight - prevEncCountRight)) / (double)(currTime_us - prevTime_us);
+    this->leftCurrVelocity = (double)(1000*(currEncCountLeft - prevEncCountLeft)) / deltaT;
+    this->rightCurrVelocity = (double)(1000*(currEncCountRight - prevEncCountRight)) / deltaT;
 
     //Filter stuff
     if (this->velIndex >= this->filterSize) this->velIndex = 0;
@@ -87,12 +93,23 @@ void MotorController::loop() {
     this->rightAvgVelocity = rightSum / (double)filterSize;
     velIndex++;
 
+    //TODO: test these new values
+    // odometry stuff - SI
+    this->wLeft = 1000 * leftAvgVelocity * PI/(180);
+    this->wRight = 1000 * rightAvgVelocity * PI/(180);
+    this->vLeft = wLeft * WHEEL_RADIUS;
+    this->vRight = wRight * WHEEL_RADIUS;
+    this->vRobot = (vLeft + vRight)/2;
+    this->wRobot = (vLeft - vRight)/WHEELS_DISTANCE;
+
+    this->dSpace = vRobot * deltaT;
+    this->dTheta = wRobot * deltaT;
+
     leftPID->Compute();
     rightPID->Compute();
 
     motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
     motorDriver->setMotorSpeed(rightPIDout*PID_MULTIPLIER, RIGHT);
-
 
     //Save last loop cycle Values
     this->prevEncCountLeft = currEncCountLeft;
@@ -142,6 +159,7 @@ void MotorController::setPIDTuning(int motor, double new_KP, double new_KI, doub
     else if (motor == RIGHT)
         rightPID->SetTunings(new_KP, new_KI, new_KD);
 }
+
 void MotorController::stop() {
     motorDriver->stopMotors();
     this->leftTargetVelocity = 0;    

@@ -37,6 +37,11 @@ double currentTime = 0;
 double LastTime = 0;
 int set = 0;
 
+String incoming;
+//TODO: change the name of these vars. 
+//The pico is supposed to receive other things
+float xIncoming = 0, yIncoming = 0, thetaIncoming = 0;
+
 void setup() {
   motorController.setup();
   Serial.begin(9600);
@@ -51,15 +56,24 @@ void loop() {
     LastTime = currentTime;
   }
 
+  if(Serial.available()){
+    incoming = Serial.readString();
+    xIncoming = incoming.substring(0, 6).toDouble();
+    yIncoming = incoming.substring(7, 13).toDouble();
+    thetaIncoming = incoming.substring(14).toDouble();
+  }
+
+  Serial.print("xIncoming: ");
+  Serial.print(xIncoming);
+  Serial.print(" yIncoming: ");
+  Serial.print(yIncoming);
+  Serial.print(" thetaIncoming: ");
+  Serial.println(thetaIncoming);
+
   motorController.setTargetVelocities(set*0.5*MAX_VELOCITY, set*0.5*MAX_VELOCITY);
   motorController.loop();
 
-  Serial.print("Left Average Velocity: ");
-  Serial.print(motorController.getAvgVelocity(LEFT));
-  Serial.print("      ");
-  Serial.print("Right Average Velocity: ");
-  Serial.print(motorController.getAvgVelocity(RIGHT));
-  Serial.println("");
+  
   
   //TODO remove this later
   delay(10);
