@@ -45,7 +45,7 @@ class MotorController{
         void setTargetVelocity(int motor, double target);
         void setTargetVelocities(double targetLeft, double targetRight);
 
-        double getAvgVelocity(int motor); //dregrees per milisecond
+        double getAvgVelocity(int motor); //degrees per milisecond
 
         void setPIDTunings(double new_KP, double new_KI, double new_KD);
 
@@ -53,6 +53,7 @@ class MotorController{
 
         void stop();
         void coast();
+        void printOdometry();
 
     private:
         MotorDriver* motorDriver;

@@ -107,10 +107,12 @@ void MotorController::loop() {
 
     leftPID->Compute();
     rightPID->Compute();
-
+    Serial.print("Left PID Out: ");
+    Serial.println(leftPIDout);
     motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
     motorDriver->setMotorSpeed(rightPIDout*PID_MULTIPLIER, RIGHT);
-
+    Serial.print("Left motor set to: ");
+    Serial.println(leftPIDout*PID_MULTIPLIER);
     //Save last loop cycle Values
     this->prevEncCountLeft = currEncCountLeft;
     this->prevEncCountRight = currEncCountRight;
@@ -176,4 +178,13 @@ double MotorController::getAvgVelocity(int motor) {
     if (motor != LEFT && motor != RIGHT) {return 0;}
     if (motor == LEFT) {return this->leftAvgVelocity;}
     else return this->rightAvgVelocity;
+}
+
+void MotorController::printOdometry() {
+    Serial.print("left/right: (");
+    Serial.print(this->vLeft); Serial.print(", "); Serial.print(this->vRight); Serial.print(")");
+    Serial.print("   V robot: ");
+    Serial.print(this->vRobot);
+    Serial.print("   W robot: ");
+    Serial.println(this->wRobot);
 }

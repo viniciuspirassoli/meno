@@ -26,9 +26,15 @@ void MotorDriver::begin() {
 
 
 void MotorDriver::setMotorSpeed(float speed, int motor) {
-    if ((motor != 1 && motor != 2) || abs(speed) > 100.0F) {
+
+    if ((motor != 1 && motor != 2))
         return;
-    }
+
+    if (speed > 100.0F)
+        speed = 100.0F;
+
+    else if (speed < -100.F) 
+        speed = -100.0F;
 
     if (speed > 0) {
         if (motor == 1) {
@@ -36,6 +42,11 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
             digitalWrite(IN_2, LOW);
             analogWrite(EN_A, (uint32_t)(speed * 2.55F));
             motor1PWM = speed;
+            /*
+            Serial.println("Debug: Left Motor set to ");
+            Serial.print((uint32_t)(speed * 2.55F));
+            Serial.println("");
+            */
         }
 
         else {
@@ -43,6 +54,11 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
             digitalWrite(IN_4, LOW);
             analogWrite(EN_B, (uint32_t)(speed * 2.55F));
             motor2PWM = speed;
+            /*
+            Serial.println("Debug: Right Motor set to ");
+            Serial.print((uint32_t)(speed * 2.55F));
+            Serial.println("");
+            */
         }
     }
 
@@ -52,16 +68,32 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
             digitalWrite(IN_2, HIGH);
             analogWrite(EN_A, (uint32_t)(-speed * 2.55F));
             motor1PWM = speed;
+            
+            Serial.print("Debug: Left Motor speed: ");
+            Serial.println(speed);
+            Serial.print("Debug: Left Motor set to ");
+            Serial.print((uint32_t)(-speed * 2.55F));
+            Serial.println("");
+            
         } else {
             digitalWrite(IN_3, LOW);
             digitalWrite(IN_4, HIGH);
             analogWrite(EN_B, (uint32_t)(-speed * 2.55F));
             motor2PWM = speed;
+            /*
+            Serial.println("Debug: Right Motor set to ");
+            Serial.print((uint32_t)(speed * 2.55F));
+            Serial.println("");
+            */
         }
     }
 
     else {
         coastMotor(motor);
+        /*
+        if (motor == 1) Serial.println("Debug: Left motor stopped.");
+        else Serial.println("Debug: Right motor stopped.");
+        */
     }
 
     return;
@@ -84,8 +116,11 @@ void MotorDriver::coastMotor(int motor) {
 }
 
 void MotorDriver::setMotors(float speed) {
-    if (abs(speed) > 100) {
-        return;
+    if (speed > 100) {
+        speed = 100.0F;
+    }
+    else if (speed < -100) {
+        speed = -100.0F;
     }
 
     if (speed > 0) {
@@ -97,6 +132,13 @@ void MotorDriver::setMotors(float speed) {
 
         analogWrite(EN_A, (uint32_t)(speed * 2.55F));
         analogWrite(EN_B, (uint32_t)(speed * 2.55F));
+
+        /*
+        Serial.println("Debug: Motors set to ");
+        Serial.print((uint32_t)(-speed * 2.55F));
+        Serial.println("");
+        */
+
         motor1PWM = speed;
         motor2PWM = speed;
     }
@@ -110,6 +152,13 @@ void MotorDriver::setMotors(float speed) {
 
         analogWrite(EN_A, (uint32_t)(-speed * 2.55F));
         analogWrite(EN_B, (uint32_t)(-speed * 2.55F));
+
+        /*
+        Serial.println("Debug: Motors set to ");
+        Serial.print((uint32_t)(-speed * 2.55F));
+        Serial.println("");
+        */
+
         motor1PWM = speed;
         motor2PWM = speed;
     }
