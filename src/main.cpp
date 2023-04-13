@@ -50,27 +50,27 @@ void setup() {
 
 
 void loop() {
-  currentTime = millis();
-  if(currentTime-LastTime >= 5000) {
-    set = abs(set-1);
-    LastTime = currentTime;
-  }
+  double left_vel = 0;
+  double right_vel = 0;
 
   if(Serial.available()){
     incoming = Serial.readString();
-    xIncoming = incoming.substring(0, 6).toDouble();
-    yIncoming = incoming.substring(7, 13).toDouble();
-    thetaIncoming = incoming.substring(14).toDouble();
+    left_vel = incoming.substring(0, 7).toDouble();
+    right_vel = incoming.substring(8, 14).toDouble();
+    // xIncoming = incoming.substring(0, 7).toDouble();
+    // yIncoming = incoming.substring(8, 14).toDouble();
+    // thetaIncoming = incoming.substring(15).toDouble();
+
   }
 
-  Serial.print("xIncoming: ");
-  Serial.print(xIncoming);
-  Serial.print(" yIncoming: ");
-  Serial.print(yIncoming);
-  Serial.print(" thetaIncoming: ");
-  Serial.println(thetaIncoming);
+  // Serial.print("xIncoming: ");
+  // Serial.print(xIncoming);
+  // Serial.print(" yIncoming: ");
+  // Serial.print(yIncoming);
+  // Serial.print(" thetaIncoming: ");
+  // Serial.println(thetaIncoming);
 
-  motorController.setTargetVelocities(set*0.5*MAX_VELOCITY, set*0.5*MAX_VELOCITY);
+  motorController.setTargetVelocities(0.01*left_vel*MAX_VELOCITY, 0.01*right_vel*MAX_VELOCITY);
   motorController.loop();
 
   
