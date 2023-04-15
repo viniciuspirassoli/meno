@@ -12,7 +12,7 @@ class MotorDriver {
     void setMotors(float speed);
     void coastMotor(int motor);
     int getSpeed(int Motor);
-  
+    void stopMotor(int motor);
 
   private:
     // pin nums

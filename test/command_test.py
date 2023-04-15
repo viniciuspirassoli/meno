@@ -1,18 +1,39 @@
 import serial
 import time
 
+set = False
 
-serialPort = "/dev/ttyACM0"  # change this to your serial port
+start_time = time.time()
+
+serialPort = "COM12"  # change this to your serial port
 baudrate = 115200
 ser = serial.Serial(serialPort, baudrate)
 
-def sendCommand(x, y, theta, print=False):
-    ser.write("{:7.3f}".format(x) + "{:7.3f}".format(y) + "{:7.3f}".format(theta))
-    if (print):
-        print("sent: " + "{:7.3f}".format(x) + "{:7.3f}".format(y) + "{:7.3f}".format(theta))
+def sendCommand(v, w, theta):
+    ser.write(bytes("{:8.3f}".format(v) + "{:8.3f}".format(w) + "{:8.3f}".format(theta), encoding='utf-8'))
+    print("sent: " + "{:8.3f}".format(v) + "{:8.3f}".format(w) + "{:8.3f}".format(theta))
 
 while True:
-    sendCommand(50, -50, 3, print=True)
-    time.sleep(5)
-    sendCommand(-50, 50, 3, print=True)
-    time.sleep(5)
+    try:
+        if ser.in_waiting > 0:
+            # Read from serial port
+            data = ser.readline().decode('utf-8').rstrip()
+            print(data)
+
+        # Check if 5 seconds have elapsed
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= 5:
+            # Write to serial port
+            if set:
+                sendCommand(50, -50, 0)
+            else:
+                sendCommand(-50, 50, 0)
+                
+            set = not set
+            # Reset start time
+            start_time = time.time()
+
+    except KeyboardInterrupt:
+        sendCommand(0, 0, 0)
+        ser.close()
+        break

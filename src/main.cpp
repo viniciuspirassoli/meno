@@ -24,6 +24,8 @@
 
 #define FILTER_SIZE 5
 
+#define mm_2_m(x) 1000*x
+
 //TODO: calibrate PIDs!!!
 #define KP 1
 #define KI 1
@@ -37,6 +39,9 @@ double currentTime = 0;
 double LastTime = 0;
 int set = 0;
 
+double target_v = 0;
+double target_w = 0;
+
 String incoming;
 //TODO: change the name of these vars. 
 //The pico is supposed to receive other things
@@ -44,36 +49,30 @@ float xIncoming = 0, yIncoming = 0, thetaIncoming = 0;
 
 void setup() {
   motorController.setup();
-  Serial.begin(9600);
+  Serial.begin(115200);
   LastTime = millis();
 } 
 
 
 void loop() {
-  double left_vel = 0;
-  double right_vel = 0;
 
   if(Serial.available()){
     incoming = Serial.readString();
-    left_vel = incoming.substring(0, 7).toDouble();
-    right_vel = incoming.substring(8, 14).toDouble();
+    target_v = incoming.substring(0, 8).toDouble();
+    target_w = incoming.substring(9, 15).toDouble();
     // xIncoming = incoming.substring(0, 7).toDouble();
     // yIncoming = incoming.substring(8, 14).toDouble();
     // thetaIncoming = incoming.substring(15).toDouble();
 
   }
 
-  // Serial.print("xIncoming: ");
-  // Serial.print(xIncoming);
-  // Serial.print(" yIncoming: ");
-  // Serial.print(yIncoming);
-  // Serial.print(" thetaIncoming: ");
-  // Serial.println(thetaIncoming);
+  // Serial.print("Left vel: ");
+  // Serial.print(0.01*left_vel*MAX_VELOCITY);
+  // Serial.print(" Right vel: ");
+  // Serial.println(0.01*right_vel*MAX_VELOCITY);
 
-  motorController.setTargetVelocities(0.01*left_vel*MAX_VELOCITY, 0.01*right_vel*MAX_VELOCITY);
   motorController.loop();
-
-  
+  motorController.printOdometry();
   
   //TODO remove this later
   delay(10);

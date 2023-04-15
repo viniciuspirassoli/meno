@@ -9,7 +9,7 @@ class MotorController{
         #define LEFT 1
         #define RIGHT 2
         #define PID_MULTIPLIER 55.866 //scales the PID output
-        #define MAX_VELOCITY 1.79 //in degrees per milisecond
+        #define MAX_W 1.79 //in degrees per milisecond
         #define WHEEL_RADIUS 0.029
         #define WHEELS_DISTANCE 0.2 
 
@@ -42,10 +42,13 @@ class MotorController{
         void loop();
 
         void setFilterSize(int newFilterSize);
-        void setTargetVelocity(int motor, double target);
-        void setTargetVelocities(double targetLeft, double targetRight);
+        void setTargetW(int motor, double target);
+        void setTargetW(double targetLeft, double targetRight);
+        //TODO: create setRobotW and setRobotV
 
-        double getAvgVelocity(int motor); //degrees per milisecond
+        double getAvgW(int motor); //degrees per milisecond
+        void setRobotW(double w);
+        void setRobotV(double v);
 
         void setPIDTunings(double new_KP, double new_KI, double new_KD);
 
@@ -61,16 +64,16 @@ class MotorController{
         EncoderHandler *leftEH, *rightEH;
         
         //vector to filter, target to PID, Input to PID for the left motor
-        double* leftVelocities;
-        double leftTargetVelocity;
-        double leftAvgVelocity;
-        double leftCurrVelocity;
+        double* leftWs;
+        double leftTargetW;
+        double leftAvgW;
+        double leftCurrW;
 
         //vector to filter, target to PID, Input to PID for the right motor
-        double* rightVelocities; 
-        double rightTargetVelocity;
-        double rightAvgVelocity;
-        double rightCurrVelocity;
+        double* rightWs; 
+        double rightTargetW;
+        double rightAvgW;
+        double rightCurrW;
 
         //Rolling Filter variables
         int filterSize;
@@ -98,10 +101,13 @@ class MotorController{
         //Estimation and odometry
         float wLeft, wRight;
         float vLeft, vRight;
-        float vRobot, wRobot;
+        float vRobot, wRobot; //to be adjusted to meet targets
         float dSpace, dTheta;
         float xEstimated, yEstimated, thetaEstimated; //absolute
         float relativeSpace, relativeTheta; //relative
+
+        double targetV, targetW; //targets received from serial port
+        double vRightT, vLeftT;
 
         double deltaT;
         

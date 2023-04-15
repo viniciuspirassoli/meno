@@ -69,11 +69,11 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
             analogWrite(EN_A, (uint32_t)(-speed * 2.55F));
             motor1PWM = speed;
             
-            Serial.print("Debug: Left Motor speed: ");
-            Serial.println(speed);
-            Serial.print("Debug: Left Motor set to ");
-            Serial.print((uint32_t)(-speed * 2.55F));
-            Serial.println("");
+            // Serial.print("Debug: Left Motor speed: ");
+            // Serial.println(speed);
+            // Serial.print("Debug: Left Motor set to ");
+            // Serial.print((uint32_t)(-speed * 2.55F));
+            // Serial.println("");
             
         } else {
             digitalWrite(IN_3, LOW);
@@ -164,6 +164,22 @@ void MotorDriver::setMotors(float speed) {
     }
 
     else coastMotors();
+}
+
+void MotorDriver::stopMotor(int motor) {
+    if (motor == 1) {
+        digitalWrite(IN_1, LOW);
+        digitalWrite(IN_2, LOW);
+        digitalWrite(EN_A, LOW);
+    }
+
+    else if (motor == 2) {
+        digitalWrite(IN_3, LOW);
+        digitalWrite(IN_4, LOW);
+        digitalWrite(EN_B, LOW);
+    }
+
+    else stopMotors();
 }
 
 void MotorDriver::stopMotors() {
