@@ -4,12 +4,13 @@
 #include <SimplyAtomic.h>
 
 class MotorController{
-    //TODO: see if we need more methods, and make them!
     public:
-        #define LEFT 1
-        #define RIGHT 2
+        #define LEFT 2
+        #define RIGHT 1
         #define PID_MULTIPLIER 55.866 //scales the PID output
-        #define MAX_W 1.79 //in degrees per milisecond
+        #define MAX_WHEEL_W 1.79 //in degrees per milisecond
+        #define MAX_ROBOT_V 0.906 // in m/s
+        #define MAX_ROBOT_W 9.06 // in rad/s
         #define WHEEL_RADIUS 0.029
         #define WHEELS_DISTANCE 0.2 
 
@@ -49,6 +50,8 @@ class MotorController{
         double getAvgW(int motor); //degrees per milisecond
         void setRobotW(double w);
         void setRobotV(double v);
+
+        EncoderHandler* getEH(int dir);
 
         void setPIDTunings(double new_KP, double new_KI, double new_KD);
 

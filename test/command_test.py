@@ -10,7 +10,7 @@ baudrate = 115200
 ser = serial.Serial(serialPort, baudrate)
 
 def sendCommand(v, w, theta):
-    ser.write(bytes("{:8.3f}".format(v) + "{:8.3f}".format(w) + "{:8.3f}".format(theta), encoding='utf-8'))
+    ser.write(bytes("{:8.3f}".format(v) + "{:8.3f}".format(w) + "{:8.3f}".format(theta) + "\n", encoding='utf-8'))
     print("sent: " + "{:8.3f}".format(v) + "{:8.3f}".format(w) + "{:8.3f}".format(theta))
 
 while True:
@@ -25,9 +25,9 @@ while True:
         if elapsed_time >= 5:
             # Write to serial port
             if set:
-                sendCommand(50, -50, 0)
+                sendCommand(0.925, 0, 0)
             else:
-                sendCommand(-50, 50, 0)
+                sendCommand(0.925, 0, 0)
                 
             set = not set
             # Reset start time

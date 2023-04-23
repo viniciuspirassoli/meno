@@ -4,6 +4,7 @@
 #include <SimplyAtomic.h>
 #include <PID_v1.h>
 #include <EncoderHandler.h>
+#include <ElectroMagnet.h>
 
 //https://arduino-pico.readthedocs.io/en/latest/
 
@@ -19,8 +20,10 @@
 #define ENCA_MOT1 14 //19 //MOTOR 1
 #define ENCB_MOT1 15 //20
 
-#define ENCA_MOT2 16 //21 //MOTOR2
-#define ENCB_MOT2 17 //22
+#define ENCA_MOT2 17 //21 //MOTOR2
+#define ENCB_MOT2 16 //22
+
+#define EM 22 //ELECTROMAGNET
 
 #define FILTER_SIZE 5
 
@@ -35,45 +38,30 @@ MotorController motorController(ENA, IN1, IN2, IN3, IN4, ENB,
                                 ENCA_MOT1, ENCB_MOT1, ENCA_MOT2, ENCB_MOT2,
                                 KP, KI, KD, KP, KI, KD);
                                 
-double currentTime = 0;
-double LastTime = 0;
-int set = 0;
+ElectroMagnet electroMagnet(EM);
+// MotorDriver motorDriver(ENA, IN1, IN2, IN3, IN4, ENB);
+// EncoderHandler leftEncoder(ENCA_MOT1, ENCB_MOT1);
+// EncoderHandler rightEncoder(ENCA_MOT2, ENCB_MOT2);
 
-double target_v = 0;
-double target_w = 0;
-
-String incoming;
-//TODO: change the name of these vars. 
-//The pico is supposed to receive other things
-float xIncoming = 0, yIncoming = 0, thetaIncoming = 0;
+unsigned long previousMillis = 0;
 
 void setup() {
   motorController.setup();
+  electroMagnet.setup();
+  // motorDriver.begin();
+  // leftEncoder.setup();
+  // rightEncoder.setup();
   Serial.begin(115200);
-  LastTime = millis();
+  previousMillis = millis();
 } 
 
 
 void loop() {
+  motorController.setRobotV(0.25*MAX_ROBOT_V);
+  motorController.setRobotW(0);
 
-  if(Serial.available()){
-    incoming = Serial.readString();
-    target_v = incoming.substring(0, 8).toDouble();
-    target_w = incoming.substring(9, 15).toDouble();
-    // xIncoming = incoming.substring(0, 7).toDouble();
-    // yIncoming = incoming.substring(8, 14).toDouble();
-    // thetaIncoming = incoming.substring(15).toDouble();
+  motorController.loop(); // do not remove unless you wish to bypass motorController
 
-  }
-
-  // Serial.print("Left vel: ");
-  // Serial.print(0.01*left_vel*MAX_VELOCITY);
-  // Serial.print(" Right vel: ");
-  // Serial.println(0.01*right_vel*MAX_VELOCITY);
-
-  motorController.loop();
-  motorController.printOdometry();
-  
   //TODO remove this later
   delay(10);
   }

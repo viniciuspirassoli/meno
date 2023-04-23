@@ -79,7 +79,6 @@ void MotorController::loop() {
 
     this->leftCurrW = (double)(1000*(currEncCountLeft - prevEncCountLeft)) / deltaT;
     this->rightCurrW = (double)(1000*(currEncCountRight - prevEncCountRight)) / deltaT;
-
     //Filter stuff
     if (this->velIndex >= this->filterSize) this->velIndex = 0;
 
@@ -94,6 +93,10 @@ void MotorController::loop() {
     
     this->leftAvgW = leftSum / (double)filterSize;
     this->rightAvgW = rightSum / (double)filterSize;
+    Serial.print("  leftAvgW = ");
+    Serial.print(leftAvgW);
+    Serial.print("  rightAvgW = ");
+    Serial.println(rightAvgW);
     velIndex++;
 
     //TODO: test these new values
@@ -108,11 +111,10 @@ void MotorController::loop() {
     this->dSpace = vRobot * deltaT;
     this->dTheta = wRobot * deltaT;
 
-    this->vRightT = (WHEELS_DISTANCE*targetW*0.5 + targetV); //targets for wheels
-    this->vLeftT = (-WHEELS_DISTANCE*targetW*0.5 + targetV); //targets for wheels
+    this->vRightT = min((WHEELS_DISTANCE*targetW*0.5 + targetV), 0.906); //targets for wheels
+    this->vLeftT = min((-WHEELS_DISTANCE*targetW*0.5 + targetV), 0.906); //targets for wheels
 
-    setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0));
-
+    setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0)); // set speed targets based in V and W
     leftPID->Compute();
     rightPID->Compute();
     // Serial.print("Left PID Out: ");
@@ -120,10 +122,14 @@ void MotorController::loop() {
     if (leftPIDout == 0) motorDriver->stopMotor(LEFT);
     else motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
     
+    Serial.print("left motor set to: ");
+    Serial.print(leftPIDout*PID_MULTIPLIER);
+    Serial.print(" | ");
+
     if (rightPIDout == 0) motorDriver->stopMotor(RIGHT);
     else motorDriver->setMotorSpeed(rightPIDout*PID_MULTIPLIER, RIGHT);
-    // Serial.print("Left motor set to: ");
-    // Serial.println(leftPIDout*PID_MULTIPLIER);
+     Serial.print("right motor set to: ");
+     Serial.println(rightPIDout*PID_MULTIPLIER);
     //Save last loop cycle Values
     this->prevEncCountLeft = currEncCountLeft;
     this->prevEncCountRight = currEncCountRight;
@@ -138,27 +144,43 @@ void MotorController::setFilterSize(int newFilterSize) {
 }
 
 void MotorController::setRobotW(double w) {
+    if (w > MAX_ROBOT_W) w = MAX_ROBOT_W;
+    else if (w < -MAX_ROBOT_W) w = -MAX_ROBOT_W;
     this->targetW = w;
 }
 
+EncoderHandler* MotorController::getEH(int dir) {
+    if (dir == RIGHT) return this->rightEH;
+    else if (dir == LEFT) return this->leftEH;
+    else return NULL;
+}
+
 void MotorController::setRobotV(double v) {
+    if (v > MAX_ROBOT_V) v = MAX_ROBOT_V;
+    else if (v < -MAX_ROBOT_V) v = -MAX_ROBOT_V;
     this->targetV = v;
 }
 
 //THIS IS FOR THE WHEELS. FOR ROBOT W SEE setRobotW
 void MotorController::setTargetW(double targetLeft, double targetRight) {
+    Serial.print("setTargetW is ran with inputs: ");
+    Serial.print(targetLeft);
+    Serial.print(" | ");
+    Serial.println(targetRight);
     this->setTargetW(LEFT, targetLeft);
     this->setTargetW(RIGHT, targetRight);
 }
 
+//THIS IS FOR THE WHEELS. FOR ROBOT W SEE setRobotW
 void MotorController::setTargetW(int motor, double target) {
+
     if (motor != RIGHT && motor != LEFT) {return;}
 
-    if (target > MAX_W) {
-        target = MAX_W;
+    if (target > MAX_WHEEL_W) {
+        target = MAX_WHEEL_W;
     }
-    else if (target < -MAX_W) {
-        target = -MAX_W;
+    else if (target < -MAX_WHEEL_W) {
+        target = -MAX_WHEEL_W;
     }
 
     if (motor == RIGHT) {

@@ -2,12 +2,12 @@
 
 EncoderHandler::EncoderHandler(uint8_t encoderPin1, uint8_t encoderPin2) : ENC_1(encoderPin1), ENC_2(encoderPin2) {
     this->resetCount();
-    attachInterrupt(ENC_1, EncoderHandler::handleInterrupt, RISING, this);
 }
 
 void EncoderHandler::setup() {
     pinMode(this->ENC_1, INPUT);
     pinMode(this->ENC_2, INPUT);
+    attachInterrupt(ENC_1, EncoderHandler::handleInterrupt, RISING, this);
 }
 
 
