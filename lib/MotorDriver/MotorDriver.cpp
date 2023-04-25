@@ -1,6 +1,9 @@
 #include "MotorDriver.h"
 #include <Arduino.h>
 
+#define LEFT 2
+#define RIGHT 1
+
 MotorDriver::MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4,
                                  int ENB) {
     EN_A = ENA;
@@ -27,7 +30,7 @@ void MotorDriver::begin() {
 
 void MotorDriver::setMotorSpeed(float speed, int motor) {
 
-    if ((motor != 1 && motor != 2))
+    if ((motor != RIGHT && motor != LEFT))
         return;
 
     if (speed > 100.0F)
@@ -37,7 +40,7 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
         speed = -100.0F;
 
     if (speed > 0) {
-        if (motor == 1) {
+        if (motor == RIGHT) {
             digitalWrite(IN_1, HIGH);
             digitalWrite(IN_2, LOW);
             analogWrite(EN_A, (uint32_t)(speed * 2.55F));
@@ -63,7 +66,7 @@ void MotorDriver::setMotorSpeed(float speed, int motor) {
     }
 
     else if (speed < 0) {
-        if (motor == 1) {
+        if (motor == RIGHT) {
             digitalWrite(IN_1, LOW);
             digitalWrite(IN_2, HIGH);
             analogWrite(EN_A, (uint32_t)(-speed * 2.55F));

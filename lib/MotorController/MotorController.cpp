@@ -4,13 +4,17 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
                                 uint8_t leftMotorEnc1, uint8_t leftMotorEnc2, uint8_t rightMotorEnc1, uint8_t rightMotorEnc2,
                                 double left_KP, double left_KI, double left_KD, double right_KP, double right_KI, double right_KD)
 {
-    enA = EN_A; in1 = IN_1; in3 = IN_3; in4 = IN_4; enB = EN_B;
+    enA = EN_A; in1 = IN_1; in2 = IN_2; in3 = IN_3; in4 = IN_4; enB = EN_B;
     leftKP = left_KP; leftKI = left_KI; leftKD = left_KD;
     rightKP = right_KP; rightKI = right_KI; rightKD = right_KD;
     leftPID = new PID(&leftAvgW, &leftPIDout, &leftTargetW, leftKP, leftKI, leftKD, DIRECT);
     rightPID = new PID(&rightAvgW, &rightPIDout, &rightTargetW, rightKP, rightKI, rightKD, DIRECT);
     leftEH = new EncoderHandler(leftMotorEnc1, leftMotorEnc2);
     rightEH = new EncoderHandler(rightMotorEnc1, rightMotorEnc2);
+
+        // MotorDriver::MotorDriver(int ENA, int IN1, int IN2, int IN3, int IN4,
+        //                          int ENB) 
+
     motorDriver = new MotorDriver(enA, in1, in2, in3, in4, enB);
 
     this->filterSize = 5;
@@ -153,6 +157,10 @@ void MotorController::loop() {
     this->prevTime_us = this->currTime_us;
 }
 
+MotorDriver* MotorController::getMD() {
+    return this->motorDriver;
+}
+
 void MotorController::setFilterSize(int newFilterSize) {
     if (newFilterSize < 1 || newFilterSize > 100) {return;}
     this->filterSize = newFilterSize;
@@ -166,6 +174,16 @@ void MotorController::setFilterSize(int newFilterSize) {
             delay(1000);
         }
     }
+}
+
+double MotorController::getTargetW(int motor) {
+    if (motor == RIGHT) {
+        return vRightT*18.0/(WHEEL_RADIUS*PI*100.0);
+    }
+    else if (motor == LEFT) {
+        return vLeftT*18.0/(WHEEL_RADIUS*PI*100.0);
+    }
+    else return -10;
 }
 
 void MotorController::setRobotW(double w) {

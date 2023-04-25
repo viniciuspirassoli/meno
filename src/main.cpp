@@ -73,22 +73,20 @@ void setup() {
 } 
 
 void loop() {
-  // currentMillis = millis();
-  // deltaMillis = currentMillis - lastMillis;
 
   currentMicros = micros();
 
   readMessage(buf);
-  for (int i = 0; i < MESSAGE_LENGTH; i++) {
-    Serial.print(buf[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
+  // for (int i = 0; i < MESSAGE_LENGTH; i++) {
+  //   Serial.print(buf[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
   parseMessage(buf);
 
-  if(readyForMovement){
+  //if(readyForMovement) {
     motorController.loop(); // do not remove unless you wish to bypass motorController
-  }
+  //}
 
   delay(10);
   //update time
@@ -126,9 +124,9 @@ void readMessage(uint8_t* buf) {
 void parseMessage(uint8_t* buf) {
   float param = 0;
   uint8_t messageType = buf[0];
-  //myFloat = *(float*)(byteArray + 1);
-  param = *(float*)(buf + 1);
-  Serial.println(param);
+  memcpy(&param, &buf[1], sizeof(float));
+
+  // Serial.println(param);
 
   switch(messageType) {
     case HEARTBEAT:

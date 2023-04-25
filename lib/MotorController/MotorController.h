@@ -76,6 +76,10 @@ class MotorController{
 
         void setEstimatedByStarting();
 
+        double getTargetW(int motor);
+
+        MotorDriver* getMD();
+
         int routine(float routineID);//should return 1 when done
 
     private:
