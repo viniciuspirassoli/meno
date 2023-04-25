@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#define MAX_EM_PWM 170
+
 class ElectroMagnet {
     public:
         ElectroMagnet(int PIN);

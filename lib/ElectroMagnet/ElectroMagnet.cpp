@@ -13,11 +13,13 @@ void ElectroMagnet::setup() {
 }
 
 void ElectroMagnet::setPWM(int PWM) {
+    if (PWM < 0) PWM = 0;
+    else if (PWM > MAX_EM_PWM) PWM = 170;
     analogWrite(this->pin, PWM);
 }
 
 void ElectroMagnet::turnON() {
-    digitalWrite(this->pin, HIGH);
+    this->setPWM(MAX_EM_PWM);
 }
 
 void ElectroMagnet::turnOFF() {

@@ -191,11 +191,16 @@ void MotorDriver::stopMotors() {
     analogWrite(EN_A, 255);
     analogWrite(EN_B, 255);
 
-    motor1PWM = 0;
-    motor2PWM = 0;
+    motor1PWM = 255;
+    motor2PWM = 255;
 }
 
 void MotorDriver::coastMotors() {
+    digitalWrite(IN_1, LOW);
+    digitalWrite(IN_2, LOW);
+    digitalWrite(IN_3, LOW);
+    digitalWrite(IN_4, LOW);
+
     analogWrite(EN_A, 0);
     analogWrite(EN_B, 0);
 

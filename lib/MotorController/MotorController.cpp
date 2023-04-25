@@ -14,9 +14,13 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
     motorDriver = new MotorDriver(enA, in1, in2, in3, in4, enB);
 
     this->filterSize = 5;
-
+    this->relativeTheta = 0;
     this->targetV = 0;
     this->targetW = 0;
+
+    this->startingTheta = 0;
+    this->startingX = 0;
+    this->startingY = 0;
 
     this->currEncCountLeft = 0;
     this->currEncCountRight = 0;
@@ -39,6 +43,8 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
         leftWs[i] = 0;
         rightWs[i] = 0;
     }
+
+    this->fullStop = false;
 }
 
 //TODO: Finish destructor
@@ -93,10 +99,10 @@ void MotorController::loop() {
     
     this->leftAvgW = leftSum / (double)filterSize;
     this->rightAvgW = rightSum / (double)filterSize;
-    Serial.print("  leftAvgW = ");
-    Serial.print(leftAvgW);
-    Serial.print("  rightAvgW = ");
-    Serial.println(rightAvgW);
+    // Serial.print("  leftAvgW = ");
+    // Serial.print(leftAvgW);
+    // Serial.print("  rightAvgW = ");
+    // Serial.println(rightAvgW);
     velIndex++;
 
     //TODO: test these new values
@@ -111,25 +117,36 @@ void MotorController::loop() {
     this->dSpace = vRobot * deltaT;
     this->dTheta = wRobot * deltaT;
 
-    this->vRightT = min((WHEELS_DISTANCE*targetW*0.5 + targetV), 0.906); //targets for wheels
-    this->vLeftT = min((-WHEELS_DISTANCE*targetW*0.5 + targetV), 0.906); //targets for wheels
+    this->thetaEstimated += dTheta;
+    this->xEstimated += dSpace*cos(thetaEstimated);
+    this->yEstimated += dSpace*sin(thetaEstimated);
+
+    this->relativeTheta += this->dTheta;
+    this->relativeSpace += this->dSpace;
+
+    this->vRightT = WHEELS_DISTANCE*targetW*0.5 + targetV; //targets for wheels
+    this->vLeftT = -WHEELS_DISTANCE*targetW*0.5 + targetV; //targets for wheels
+
+    if (abs(this->vRightT) > 0.906) {
+        if (this->vRightT > 0) this->vRightT = 0.906;
+        else this->vRightT = -0.906;
+    }
+
+    if (abs(this->vLeftT > 0.906)) {
+        if (this->vLeftT > 0) this->vLeftT = 0.906;
+        else this->vLeftT = -0.906;
+    }
 
     setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0)); // set speed targets based in V and W
     leftPID->Compute();
     rightPID->Compute();
-    // Serial.print("Left PID Out: ");
-    // Serial.println(leftPIDout);
-    if (leftPIDout == 0) motorDriver->stopMotor(LEFT);
+
+    if (fullStop) motorDriver->coastMotor(LEFT);
     else motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
     
-    Serial.print("left motor set to: ");
-    Serial.print(leftPIDout*PID_MULTIPLIER);
-    Serial.print(" | ");
-
-    if (rightPIDout == 0) motorDriver->stopMotor(RIGHT);
+    if (fullStop) motorDriver->coastMotor(RIGHT);
     else motorDriver->setMotorSpeed(rightPIDout*PID_MULTIPLIER, RIGHT);
-     Serial.print("right motor set to: ");
-     Serial.println(rightPIDout*PID_MULTIPLIER);
+
     //Save last loop cycle Values
     this->prevEncCountLeft = currEncCountLeft;
     this->prevEncCountRight = currEncCountRight;
@@ -139,8 +156,16 @@ void MotorController::loop() {
 void MotorController::setFilterSize(int newFilterSize) {
     if (newFilterSize < 1 || newFilterSize > 100) {return;}
     this->filterSize = newFilterSize;
-    if (!realloc(this->leftWs, newFilterSize*sizeof(double)) && Serial.available()) {Serial.print("fuck");}
-    if (!realloc(this->rightWs, newFilterSize*sizeof(double)) && Serial.available()) {Serial.print("fuck");}
+    if(!realloc(this->leftWs, newFilterSize*sizeof(double))) {
+        while(true) {
+            delay(1000);
+        }
+    }
+    if (!realloc(this->rightWs, newFilterSize*sizeof(double))) {
+        while(true) {
+            delay(1000);
+        }
+    }
 }
 
 void MotorController::setRobotW(double w) {
@@ -163,10 +188,6 @@ void MotorController::setRobotV(double v) {
 
 //THIS IS FOR THE WHEELS. FOR ROBOT W SEE setRobotW
 void MotorController::setTargetW(double targetLeft, double targetRight) {
-    Serial.print("setTargetW is ran with inputs: ");
-    Serial.print(targetLeft);
-    Serial.print(" | ");
-    Serial.println(targetRight);
     this->setTargetW(LEFT, targetLeft);
     this->setTargetW(RIGHT, targetRight);
 }
@@ -205,21 +226,87 @@ void MotorController::setPIDTuning(int motor, double new_KP, double new_KI, doub
 }
 
 void MotorController::stop() {
+    this->fullStop = true;
     motorDriver->stopMotors();
     this->leftTargetW = 0;    
     this->rightTargetW = 0;
 }
 
 void MotorController::coast() {
+    this->fullStop = true;
     motorDriver->coastMotors();
     this->leftTargetW = 0;
     this->rightTargetW = 0;
+}
+
+bool MotorController::isStopped() {
+    return this->fullStop;
+}
+
+void MotorController::setStartingTheta(float sTheta) {
+    this->startingTheta = sTheta;
+}
+
+void MotorController::setStartingX(float sX) {
+    this->startingX = sX;
+}
+
+void MotorController::setStartingY(float sY) {
+    this->startingY = sY;
+}
+
+void MotorController::setEstimatedByStarting(){//TODO verify dis
+    this->thetaEstimated = startingTheta;
+    this->xEstimated = startingX;
+    this->yEstimated = startingY;
+}
+
+void MotorController::setEstimatedTheta(float theta) {
+    this->thetaEstimated = theta;
+}
+
+void MotorController::setEstimatedX(float x) {
+    this->xEstimated = x;
+}
+
+void MotorController::setEstimatedY(float y) {
+    this->yEstimated = y;
+}
+
+void MotorController::turnMovementOn() {
+    this->fullStop = false;
 }
 
 double MotorController::getAvgW(int motor) {
     if (motor != LEFT && motor != RIGHT) {return 0;}
     if (motor == LEFT) {return this->leftAvgW;}
     else return this->rightAvgW;
+}
+
+void MotorController::resetRelativeTheta() {
+    this->relativeTheta = 0;
+}
+
+int MotorController::routine(float routineID){
+    switch((int)routineID){
+    case 0://vai pega e volta
+    break;
+
+    case 1://vai deixa volta
+    break;
+    
+    case 2:// -90 (deslocamento, i.e., horário)
+    break;
+
+    case 3:// +90 (deslocamento, i.e., anti-horário)
+    break;
+
+    case 4:// -180
+    break;
+ 
+    case 5:// +180
+    break;
+    }
 }
 
 void MotorController::printOdometry() {

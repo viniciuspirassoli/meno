@@ -57,9 +57,26 @@ class MotorController{
 
         void setPIDTuning(int motor, double new_KP, double new_KI, double new_KD);
 
+        void turnMovementOn();
+
+        void resetRelativeTheta();
+
         void stop();
         void coast();
         void printOdometry();
+        bool isStopped();
+
+        void setEstimatedTheta(float theta);
+        void setEstimatedX(float x);
+        void setEstimatedY(float y);
+
+        void setStartingTheta(float sTheta);
+        void setStartingX(float sX);
+        void setStartingY(float sY);
+
+        void setEstimatedByStarting();
+
+        int routine(float routineID);//should return 1 when done
 
     private:
         MotorDriver* motorDriver;
@@ -106,6 +123,7 @@ class MotorController{
         float vLeft, vRight;
         float vRobot, wRobot; //to be adjusted to meet targets
         float dSpace, dTheta;
+        float startingTheta, startingX, startingY;
         float xEstimated, yEstimated, thetaEstimated; //absolute
         float relativeSpace, relativeTheta; //relative
 
@@ -113,7 +131,7 @@ class MotorController{
         double vRightT, vLeftT;
 
         double deltaT;
-        
 
+        bool fullStop; // full stop to bypass PID and always stop the motors no matter what
         
 };
