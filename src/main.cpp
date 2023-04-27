@@ -77,13 +77,8 @@ void loop() {
   currentMicros = micros();
 
   readMessage(buf);
-  // for (int i = 0; i < MESSAGE_LENGTH; i++) {
-  //   Serial.print(buf[i]);
-  //   Serial.print(" ");
-  // }
-  // Serial.println();
-  parseMessage(buf);
 
+  parseMessage(buf);
   //if(readyForMovement) {
     motorController.loop(); // do not remove unless you wish to bypass motorController
   //}
@@ -182,8 +177,8 @@ void sendMessage(uint8_t messageType) {
 }
 
 void sendMessage(uint8_t messageType, float realParam) {
-  if (Serial.availableForWrite() >= MESSAGE_LENGTH) {
+  // if (Serial.availableForWrite() >= MESSAGE_LENGTH) {
     Serial.write(messageType);
     Serial.print(realParam);
-  }
+  //}
 }
