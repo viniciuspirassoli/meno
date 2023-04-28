@@ -65,6 +65,10 @@ class MotorController{
         void coast();
         void printOdometry();
         bool isStopped();
+        
+        float getEstimatedTheta();
+        float getEstimatedX();
+        float getEstimatedY();
 
         void setEstimatedTheta(float theta);
         void setEstimatedX(float x);

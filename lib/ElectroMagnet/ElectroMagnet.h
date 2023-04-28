@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define MAX_EM_PWM 170
+#define MAX_EM_PWM 255
 
 class ElectroMagnet {
     public:

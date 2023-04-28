@@ -142,8 +142,11 @@ void MotorController::loop() {
     }
 
     setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0)); // set speed targets based in V and W
-    leftPID->Compute();
-    rightPID->Compute();
+    
+    if (!fullStop) {
+        leftPID->Compute();
+        rightPID->Compute();
+    }
 
     if (fullStop) motorDriver->coastMotor(LEFT);
     else motorDriver->setMotorSpeed(leftPIDout*PID_MULTIPLIER, LEFT);
@@ -159,6 +162,18 @@ void MotorController::loop() {
 
 MotorDriver* MotorController::getMD() {
     return this->motorDriver;
+}
+
+float MotorController::getEstimatedTheta() {
+    return this->thetaEstimated;
+}
+
+float MotorController::getEstimatedX() {
+    return this->xEstimated;
+}
+
+float MotorController::getEstimatedY() {
+    return this->yEstimated;
 }
 
 void MotorController::setFilterSize(int newFilterSize) {

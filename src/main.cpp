@@ -32,11 +32,12 @@
 #define MAX_READ_TIME 300 //microseconds
 
 //TODO: calibrate PIDs!!!
-#define KP 1
-#define KI 1
-#define KD 0
+#define KP 0.5
+#define KI 1.5
+#define KD 0.001
 
 bool readyForMovement = false;
+bool movementLatch = false;
 
 MotorController motorController(ENA, IN1, IN2, IN3, IN4, ENB,
                                 ENCA_MOT1, ENCB_MOT1, ENCA_MOT2, ENCB_MOT2,
@@ -51,8 +52,21 @@ unsigned long lastMillis;
 unsigned long deltaMillis;
 
 unsigned long currentMicros;
-unsigned long lastMicros;
-unsigned long deltaMicros;
+unsigned long lastMicrosSinceX;
+unsigned long lastMicrosSinceY;
+unsigned long lastMicrosSinceTheta;
+
+unsigned int posUpdatePeriod = 500000; //in micros
+
+// last since x y theta message was sent
+float lastEstX;
+float lastEstY;
+float lastEstTheta;
+
+// current
+float currEstX;
+float currEstY;
+float currEstTheta;
 
 // communication functions:
 void readMessage(byte* buf);
@@ -65,16 +79,65 @@ void setup() {
   electroMagnet.setup();
   Serial.begin(115200);
   currentMicros = micros();
-  lastMicros = 0;
+  lastMicrosSinceX = 0;
   
   for (int i = 0; i < MESSAGE_LENGTH; i++) {
     buf[i] = 0;
   }
+
+  lastEstX = motorController.getEstimatedX();
+  lastEstY = motorController.getEstimatedY();
+  lastEstTheta = motorController.getEstimatedTheta();
+  lastMicrosSinceTheta = micros();
+  lastMicrosSinceX = micros();
+  lastMicrosSinceY = micros();
 } 
+
+// messages that can be received
+typedef enum {
+NO_MESSAGE = 0,
+HEARTBEAT,
+FULL_STOP,
+V_COM,
+W_COM,
+SET_EM,
+SEND_ROUTINE,
+STOP_MOTORS,
+READY,
+SET_X,
+SET_Y,      
+SET_THETA,
+ACK_FS,
+DX,
+DY,
+DT,
+ROUTINE_DONE 
+} message_t;
 
 void loop() {
 
   currentMicros = micros();
+
+  // if (currentMicros - lastMicrosSinceX >= posUpdatePeriod) {
+  //   currEstX = motorController.getEstimatedX();
+  //   sendMessage(DX, currEstX - lastEstX);
+  //   lastEstX = motorController.getEstimatedX();
+  //   lastMicrosSinceX = micros();
+  // }
+
+  // if (currentMicros - lastMicrosSinceY >= posUpdatePeriod) {
+  //   currEstY = motorController.getEstimatedY();
+  //   sendMessage(DY, currEstY - lastEstY);
+  //   lastEstY = motorController.getEstimatedY();
+  //   lastMicrosSinceY = micros();
+  // }
+
+  // if (currentMicros - lastMicrosSinceTheta >= posUpdatePeriod) {
+  //   currEstTheta = motorController.getEstimatedTheta();
+  //   sendMessage(DT, currEstTheta - lastEstTheta);
+  //   lastEstTheta = motorController.getEstimatedTheta();
+  //   lastMicrosSinceTheta = micros();
+  // }
 
   readMessage(buf);
 
@@ -84,29 +147,7 @@ void loop() {
   //}
 
   delay(10);
-  //update time
-  lastMicros = currentMicros;
 }
-
-// messages that can be received
-#define HEARTBEAT     255
-#define FULL_STOP     0
-#define V_COM         1
-#define W_COM         2
-#define SET_EM        3
-#define SEND_ROUTINE  4
-#define STOP_MOTORS   5
-#define READY         6
-#define SET_X         7
-#define SET_Y         8
-#define SET_THETA     9
-
-// messages that can be sent
-#define ACK_FS        10
-#define DX            11
-#define DY            12
-#define DT            13
-#define ROUTINE_DONE  14
 
 // received messages are always 1 byte + 1 float
 void readMessage(uint8_t* buf) {
@@ -115,16 +156,17 @@ void readMessage(uint8_t* buf) {
   }
 }
 
-// TODO: change from receiving 2 bytes to receiving a byte and a float.
 void parseMessage(uint8_t* buf) {
   float param = 0;
   uint8_t messageType = buf[0];
   memcpy(&param, &buf[1], sizeof(float));
 
-  // Serial.println(param);
-
   switch(messageType) {
     case HEARTBEAT:
+      if(!movementLatch){
+        readyForMovement = true;
+        movementLatch = true;
+        }
       sendMessage(HEARTBEAT);
     break;
     case FULL_STOP:
@@ -155,7 +197,8 @@ void parseMessage(uint8_t* buf) {
     break;
     case READY:
       motorController.setEstimatedByStarting();
-      readyForMovement = true;
+      if(param == 1) readyForMovement = true;
+      else readyForMovement = false;
     break;
     case SET_X:
       if (readyForMovement) motorController.setEstimatedX(param);
@@ -170,6 +213,11 @@ void parseMessage(uint8_t* buf) {
       else motorController.setStartingTheta(param);
     break;
   }
+
+  //clear buffer
+  for(int i = 0; i < MESSAGE_LENGTH; i++) {
+    buf[i] = NO_MESSAGE;
+  }
 }
 
 void sendMessage(uint8_t messageType) {
@@ -177,8 +225,10 @@ void sendMessage(uint8_t messageType) {
 }
 
 void sendMessage(uint8_t messageType, float realParam) {
-  // if (Serial.availableForWrite() >= MESSAGE_LENGTH) {
     Serial.write(messageType);
-    Serial.print(realParam);
-  //}
+    byte* floatBytes = (byte*)&realParam;
+
+    for (int i = 0; i < 4; i++) {
+      Serial.write(floatBytes[i]);
+    }
 }
