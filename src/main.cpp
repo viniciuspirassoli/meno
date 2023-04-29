@@ -36,8 +36,11 @@
 #define KI 1.5
 #define KD 0.001
 
-bool readyForMovement = false;
-bool movementLatch = false;
+#define INITIAL_X 0
+#define INITIAL_Y 0
+#define INITIAL_THETA 0
+
+bool readyForMovement = true;
 
 MotorController motorController(ENA, IN1, IN2, IN3, IN4, ENB,
                                 ENCA_MOT1, ENCB_MOT1, ENCA_MOT2, ENCB_MOT2,
@@ -52,11 +55,9 @@ unsigned long lastMillis;
 unsigned long deltaMillis;
 
 unsigned long currentMicros;
-unsigned long lastMicrosSinceX;
-unsigned long lastMicrosSinceY;
-unsigned long lastMicrosSinceTheta;
+unsigned long lastMicrosSincePosUpdate = 0;
 
-unsigned int posUpdatePeriod = 500000; //in micros
+unsigned int posUpdatePeriod = 5000; //in micros
 
 // last since x y theta message was sent
 float lastEstX;
@@ -79,18 +80,18 @@ void setup() {
   electroMagnet.setup();
   Serial.begin(115200);
   currentMicros = micros();
-  lastMicrosSinceX = 0;
   
   for (int i = 0; i < MESSAGE_LENGTH; i++) {
     buf[i] = 0;
   }
 
+  motorController.setEstimatedX(INITIAL_X);
+  motorController.setEstimatedY(INITIAL_Y);
+  motorController.setEstimatedTheta(INITIAL_THETA);
+
   lastEstX = motorController.getEstimatedX();
   lastEstY = motorController.getEstimatedY();
   lastEstTheta = motorController.getEstimatedTheta();
-  lastMicrosSinceTheta = micros();
-  lastMicrosSinceX = micros();
-  lastMicrosSinceY = micros();
 } 
 
 // messages that can be received
@@ -118,34 +119,19 @@ void loop() {
 
   currentMicros = micros();
 
-  // if (currentMicros - lastMicrosSinceX >= posUpdatePeriod) {
-  //   currEstX = motorController.getEstimatedX();
-  //   sendMessage(DX, currEstX - lastEstX);
-  //   lastEstX = motorController.getEstimatedX();
-  //   lastMicrosSinceX = micros();
-  // }
-
-  // if (currentMicros - lastMicrosSinceY >= posUpdatePeriod) {
-  //   currEstY = motorController.getEstimatedY();
-  //   sendMessage(DY, currEstY - lastEstY);
-  //   lastEstY = motorController.getEstimatedY();
-  //   lastMicrosSinceY = micros();
-  // }
-
-  // if (currentMicros - lastMicrosSinceTheta >= posUpdatePeriod) {
-  //   currEstTheta = motorController.getEstimatedTheta();
-  //   sendMessage(DT, currEstTheta - lastEstTheta);
-  //   lastEstTheta = motorController.getEstimatedTheta();
-  //   lastMicrosSinceTheta = micros();
-  // }
+  // sends x, y, theta estimated by encoders to serial port every posUpdatePeriod
+  if (currentMicros - lastMicrosSincePosUpdate >= posUpdatePeriod) {
+    sendMessage(DX, motorController.getEstimatedX());
+    sendMessage(DY, motorController.getEstimatedY());
+    sendMessage(DT, motorController.getEstimatedTheta());
+  }
 
   readMessage(buf);
+  parseMessage(buf); // already does actions
 
-  parseMessage(buf);
-  //if(readyForMovement) {
-    motorController.loop(); // do not remove unless you wish to bypass motorController
-  //}
+  motorController.loop(); // do not remove unless you wish to bypass motorController
 
+  //TODO: remove this
   delay(10);
 }
 
@@ -163,10 +149,6 @@ void parseMessage(uint8_t* buf) {
 
   switch(messageType) {
     case HEARTBEAT:
-      if(!movementLatch){
-        readyForMovement = true;
-        movementLatch = true;
-        }
       sendMessage(HEARTBEAT);
     break;
     case FULL_STOP:
@@ -220,6 +202,7 @@ void parseMessage(uint8_t* buf) {
   }
 }
 
+// top 10 overload foda
 void sendMessage(uint8_t messageType) {
   sendMessage(messageType, 0.0);
 }
