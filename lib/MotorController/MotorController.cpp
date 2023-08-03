@@ -35,7 +35,7 @@ MotorController::MotorController(uint8_t EN_A, uint8_t IN_1, uint8_t IN_2, uint8
     this->prevTime_us = 0;
     this->velIndex = 0;
 
-    this->deltaT = 0;
+    this->deltaT_us = 0;
 
     this->rightCurrW = 0;
     this->leftCurrW = 0;
@@ -67,7 +67,8 @@ void MotorController::setup() {
 
     currTime_us = micros();
 
-    deltaT = (double) (currTime_us - prevTime_us);
+    deltaT_us = (double) (currTime_us - prevTime_us);
+    deltaT_s = deltaT_us / 1.0e6;
 
     leftPID->SetMode(AUTOMATIC);
     rightPID->SetMode(AUTOMATIC);
@@ -80,15 +81,16 @@ void MotorController::setup() {
 
 void MotorController::loop() {
     this->currTime_us = micros();
-    this->deltaT = (double) (currTime_us - prevTime_us);
+    this->deltaT_us = (double) (currTime_us - prevTime_us);
+    this->deltaT_s = deltaT_us / 1.0e6;
 
     ATOMIC() {
         this->currEncCountLeft = leftEH->getCount();
         this->currEncCountRight = rightEH->getCount();
     }
 
-    this->leftCurrW = (double)(1000*(currEncCountLeft - prevEncCountLeft)) / deltaT;
-    this->rightCurrW = (double)(1000*(currEncCountRight - prevEncCountRight)) / deltaT;
+    this->leftCurrW = (double)(1000*(currEncCountLeft - prevEncCountLeft)) / deltaT_us;
+    this->rightCurrW = (double)(1000*(currEncCountRight - prevEncCountRight)) / deltaT_us;
     //Filter stuff
     if (this->velIndex >= this->filterSize) this->velIndex = 0;
 
@@ -115,15 +117,27 @@ void MotorController::loop() {
     this->wRight = 1000 * rightAvgW * PI/(180);
     this->vLeft = wLeft * WHEEL_RADIUS;
     this->vRight = wRight * WHEEL_RADIUS;
-    this->vRobot = (vLeft + vRight)/2;
+    this->vRobot = (vLeft + vRight)/2.0;
     this->wRobot = (vRight - vLeft)/WHEELS_DISTANCE;
- 
-    this->dSpace = vRobot * deltaT;
-    this->dTheta = wRobot * deltaT;
+    
+    this->dSpace = vRobot * deltaT_s;
+    this->dTheta = wRobot * deltaT_s;
+
+    Serial.print("\nvRobot: ");
+    Serial.print(vRobot);
+    Serial.print(" | dSpace: ");
+    Serial.print(dSpace);
 
     this->thetaEstimated += dTheta;
     this->xEstimated += dSpace*cos(thetaEstimated);
     this->yEstimated += dSpace*sin(thetaEstimated);
+
+    Serial.print("\nEstT: ");
+    Serial.print(thetaEstimated);
+    Serial.print(" | EstX: ");
+    Serial.print(xEstimated);
+    Serial.print(" | EstY: ");
+    Serial.print(yEstimated);
 
     this->relativeTheta += this->dTheta;
     this->relativeSpace += this->dSpace;
@@ -141,7 +155,7 @@ void MotorController::loop() {
         else this->vLeftT = -0.906;
     }
 
-    setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0)); // set speed targets based in V and W
+    setTargetW(vLeftT*18.0/(WHEEL_RADIUS*PI*100.0), vRightT*18.0/(WHEEL_RADIUS*PI*100.0)); // set speed targets based on V and W
     
     if (!fullStop) {
         leftPID->Compute();
@@ -245,6 +259,38 @@ void MotorController::setTargetW(int motor, double target) {
     }
 }
 
+        // double getLeftKI();
+        // double getLeftKP();
+        // double getLeftKD();
+
+        // double getRightKP();
+        // double getRightKI();
+        // double getRightKD();
+
+double MotorController::getRightKP() {
+    return rightKP;
+}
+
+double MotorController::getRightKI() {
+    return rightKI;
+}
+
+double MotorController::getRightKD() {
+    return rightKD;
+}
+
+double MotorController::getLeftKP() {
+    return leftKP;
+}
+
+double MotorController::getLeftKI() {
+    return leftKI;
+}
+
+double MotorController::getLeftKD() {
+    return leftKD;
+}
+
 void MotorController::setPIDTunings(double new_KP, double new_KI, double new_KD) {
     leftPID->SetTunings(new_KP, new_KI, new_KD);
     rightPID->SetTunings(new_KP, new_KI, new_KD);
@@ -340,6 +386,8 @@ int MotorController::routine(float routineID){
     case 5:// +180
     break;
     }
+
+    return 1;
 }
 
 void MotorController::printOdometry() {

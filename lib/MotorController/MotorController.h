@@ -53,6 +53,14 @@ class MotorController{
 
         EncoderHandler* getEH(int dir);
 
+        double getLeftKI();
+        double getLeftKP();
+        double getLeftKD();
+
+        double getRightKP();
+        double getRightKI();
+        double getRightKD();
+
         void setPIDTunings(double new_KP, double new_KI, double new_KD);
 
         void setPIDTuning(int motor, double new_KP, double new_KI, double new_KD);
@@ -138,7 +146,8 @@ class MotorController{
         double targetV, targetW; //targets received from serial port
         double vRightT, vLeftT;
 
-        double deltaT;
+        double deltaT_us;
+        double deltaT_s;
 
         bool fullStop; // full stop to bypass PID and always stop the motors no matter what
         

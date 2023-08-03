@@ -57,7 +57,7 @@ unsigned long deltaMillis;
 unsigned long currentMicros;
 unsigned long lastMicrosSincePosUpdate = 0;
 
-unsigned int posUpdatePeriod = 5000; //in micros
+unsigned int posUpdatePeriod = 1000000; //in micros
 
 // last since x y theta message was sent
 float lastEstX;
@@ -92,6 +92,8 @@ void setup() {
   lastEstX = motorController.getEstimatedX();
   lastEstY = motorController.getEstimatedY();
   lastEstTheta = motorController.getEstimatedTheta();
+
+  motorController.turnMovementOn();
 } 
 
 // messages that can be received
@@ -112,22 +114,34 @@ ACK_FS,
 DX,
 DY,
 DT,
-ROUTINE_DONE 
+ROUTINE_DONE,
+SET_P_L,
+SET_I_L,
+SET_D_L,
+SET_P_R,
+SET_I_R,
+SET_D_R
 } message_t;
 
 void loop() {
 
   currentMicros = micros();
 
-  // sends x, y, theta estimated by encoders to serial port every posUpdatePeriod
-  if (currentMicros - lastMicrosSincePosUpdate >= posUpdatePeriod) {
-    sendMessage(DX, motorController.getEstimatedX());
-    sendMessage(DY, motorController.getEstimatedY());
-    sendMessage(DT, motorController.getEstimatedTheta());
+  if (currentMicros <= 5e6) {
+    motorController.setRobotV(0.2);
   }
+  else motorController.stop();
 
-  readMessage(buf);
-  parseMessage(buf); // already does actions
+  // sends x, y, theta estimated by encoders to serial port every posUpdatePeriod
+  // if (currentMicros - lastMicrosSincePosUpdate >= posUpdatePeriod) {
+  //   sendMessage(DX, motorController.getEstimatedX());
+  //   sendMessage(DY, motorController.getEstimatedY());
+  //   sendMessage(DT, motorController.getEstimatedTheta());
+  //   lastMicrosSincePosUpdate = micros();
+  // }
+
+  // readMessage(buf);
+  // parseMessage(buf); // already does actions
 
   motorController.loop(); // do not remove unless you wish to bypass motorController
 
@@ -193,6 +207,24 @@ void parseMessage(uint8_t* buf) {
     case SET_THETA:
       if (readyForMovement) motorController.setEstimatedTheta(param);
       else motorController.setStartingTheta(param);
+    break;
+    case SET_P_L:
+      motorController.setPIDTuning(LEFT, param, motorController.getLeftKI(), motorController.getLeftKD());
+    break;
+    case SET_I_L:
+      motorController.setPIDTuning(LEFT, motorController.getLeftKP(), param, motorController.getLeftKD());
+    break;
+    case SET_D_L:
+      motorController.setPIDTuning(LEFT, motorController.getLeftKD(), motorController.getLeftKI(), param);
+    break;
+    case SET_P_R:
+      motorController.setPIDTuning(RIGHT, param, motorController.getRightKI(), motorController.getRightKD());
+    break;
+    case SET_I_R:
+      motorController.setPIDTuning(RIGHT, motorController.getRightKP(), param, motorController.getRightKD());
+    break;
+    case SET_D_R:
+      motorController.setPIDTuning(RIGHT, motorController.getRightKP(), motorController.getRightKI(), param);
     break;
   }
 
